@@ -58,11 +58,15 @@ export default function CesiumViewer() {
 
   useEffect(() => {
     IonResource.fromAssetId(2275207).then(setTilesetUrl);
-    fetch("./public/markers.json")
+    fetch("/markers.json")
       .then((res) => res.json())
       .then(setMarkers)
       .catch(console.error);
   }, []);
+
+
+
+  
 
   const handleFlyTo = (view) => {
     const viewer = viewerRef.current?.cesiumElement;
@@ -92,7 +96,7 @@ export default function CesiumViewer() {
               marker.height
             )}
             billboard={{
-              image: "./public/marker.svg",
+              image: "/marker.svg",
               verticalOrigin: VerticalOrigin.BOTTOM,
               scale: 1,
             }}
