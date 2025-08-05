@@ -1,0 +1,54 @@
+/* Hide timeline and animation if still visible */
+.cesium-timeline,
+.cesium-animation {
+  display: none !important;
+}
+
+/* Restyle selection indicator */
+.cesium-selection-wrapper {
+  border: 2px solid #8dc63f;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 12px rgba(141, 198, 63, 0.6);
+
+}
+
+/* Restyle infobox */
+.cesium-infoBox {
+  border-radius: 12px;
+  border: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  font-family: "Arial", sans-serif;
+  background: white;
+  color: #333;
+  overflow: hidden;
+    margin-right: 20px;
+}
+
+.cesium-infoBox .cesium-infoBox-title {
+  font-size: 1.2rem;
+  background-color: #009391;
+  color: white;
+  padding: 0.75rem 1rem;
+  
+}
+
+.cesium-infoBox-description {
+  color: #1f2937 !important; /* bijv. Tailwind's text-gray-800 */
+  font-family: 'Inter', sans-serif; /* optioneel: strakkere fontstijl */
+  font-size: 1rem; /* eventueel aanpassen */
+  line-height: 1.5;
+}
+
+
+/* Optional: Hide Cesium credit watermark */
+.cesium-widget-credits{
+  display: none !important;
+}
+
+
+.cesium-viewer-selectionIndicatorContainer , .cesium-infoBox-camera {
+  display: none !important;
+}
+
+
