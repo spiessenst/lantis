@@ -8,14 +8,15 @@ import {
   Math as CesiumMath,
   VerticalOrigin,
   ShadowMode,
-  ScreenSpaceEventType
+  ScreenSpaceEventType,
+  Color
 } from "cesium";
 
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 
 Ion.defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNzZiZGUxYS0zNDQwLTQxOWEtOTUxYy02ZTMzY2JmMTgwMGEiLCJpZCI6MTEwMDQwLCJpYXQiOjE3MzY0Mjc5MjJ9.rNoNK8m6dDeKhtghIr8p0sOYz3uuxYq_yFnhHNOFbas";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
 
 const viewerOptions = {
   timeline: false,
@@ -28,7 +29,7 @@ const viewerOptions = {
   sceneModePicker: false,
   infoBox: false,
   selectionIndicator: false,
-
+//globe : false,
   terrainShadows: ShadowMode.ENABLED,
  shouldAnimate: false,
 };
@@ -77,9 +78,10 @@ export default function CesiumViewer() {
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
-   
+    IonResource.fromAssetId(2988671).then(setTilesetUrl);
     IonResource.fromAssetId(2275207).then(setTilesetUrl);
-     
+  
+   
   }, []);
 
 
@@ -121,6 +123,8 @@ export default function CesiumViewer() {
     }
   };
 
+  
+
   return (
     <div className="relative w-full h-screen">
       <Viewer ref={viewerRef} full {...viewerOptions}   >
@@ -130,7 +134,27 @@ export default function CesiumViewer() {
             shadows={ShadowMode.ENABLED}
            onReady={handleTilesetReady} 
           /> 
+
+          
         )}
+ <Entity
+       position={Cartesian3.fromDegrees(4.3243588, 51.1760186, 100)}
+        model={{
+          uri: tilesetUrl,
+          minimumPixelSize: 64,    // Ensures model remains visible when zoomed out
+          maximumScale: 20000,     // Prevents model from becoming too large
+          show: true,              // Visibility toggle
+          scale: 1.0,             // Adjust scale as needed
+          color: undefined,        // Optional: Add color tint (e.g., Cesium.Color.RED.withAlpha(0.5))
+     
+        }}
+        // Optional event handlers:
+        onClick={() => console.log('Model clicked')}
+        onMouseEnter={() => console.log('Mouse over model')}
+        onMouseLeave={() => console.log('Mouse left model')}
+         onReady={console.log('Model is ready')} 
+      />
+      
         {markers.map((marker) => (
           <Entity
             key={marker.id}
@@ -160,6 +184,13 @@ export default function CesiumViewer() {
 
       {/* Popup */}
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+
+
+
+   
     </div>
+
+
+
   );
 }
