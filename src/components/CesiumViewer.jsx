@@ -78,8 +78,10 @@ export default function CesiumViewer() {
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
-    IonResource.fromAssetId(2988671).then(setTilesetUrl);
+
     IonResource.fromAssetId(2275207).then(setTilesetUrl);
+
+        IonResource.fromAssetId(2988671).then(setTilesetUrl);
   
    
   }, []);
