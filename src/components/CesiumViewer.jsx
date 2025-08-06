@@ -90,6 +90,7 @@ export default function CesiumViewer() {
       .catch(console.error);
     const viewer = viewerRef.current?.cesiumElement;
     if (viewer) {
+       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 5000; 
       viewer.camera.setView({
         destination: projectCenter,
         orientation: {
@@ -97,6 +98,7 @@ export default function CesiumViewer() {
           pitch: CesiumMath.toRadians(-30),
           roll: 0,
         },
+           
       });
     }
   };
@@ -111,7 +113,7 @@ export default function CesiumViewer() {
         orientation: view.orientation,
         duration: 2.0,
       });
-       setSelectedMarker(null)
+      setSelectedMarker(null);
     }
   };
 
