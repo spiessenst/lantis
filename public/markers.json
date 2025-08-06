@@ -2,7 +2,7 @@
   {
     "id": "marker-1",
     "name": "Toren 1",
-    "description": "Toren 1 is een belangrijk herkenningspunt binnen het projectgebied. Deze toren fungeert als uitkijkpunt en biedt een panoramisch zicht over de werfzone. De constructie van de toren is een voorbeeld van duurzame architectuur en innovatieve engineering. Bezoekers kunnen hier informatie verkrijgen over de voortgang van de werken en de toekomstige ontwikkelingen in de regio.",
+    "description": "Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone. De constructie van de toren is een voorbeeld van duurzame architectuur en innovatieve engineering. Bezoekers kunnen hier informatie verkrijgen over de voortgang van de werken en de toekomstige ontwikkelingen in de regio.",
     "image": "https://via.placeholder.com/300x200",
     "longitude": 4.324704,
     "latitude": 51.176033,
@@ -40,6 +40,18 @@
     "longitude": 4.320000,
     "latitude": 51.165000,
     "height": 70,
+    "color": "GREEN",
+    "size": 11
+  },
+
+    {
+    "id": "marker-5",
+    "name": "Toren 45",
+    "description": "Toren 5 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
+    "image": "https://via.placeholder.com/300x200",
+    "longitude": 4.320050,
+    "latitude": 51.165000,
+    "height": 200,
     "color": "GREEN",
     "size": 11
   }

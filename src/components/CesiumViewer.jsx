@@ -1,12 +1,21 @@
 // src/components/CesiumViewer.jsx
 import { useEffect, useRef, useState } from "react";
-import { Viewer, Cesium3DTileset, CameraFlyTo, Entity } from "resium";
-import { Cartesian3, Ion, IonResource, Math as CesiumMath, Color, VerticalOrigin } from "cesium";
+import { Viewer, Cesium3DTileset, Entity } from "resium";
+import {
+  Cartesian3,
+  Ion,
+  IonResource,
+  Math as CesiumMath,
+  VerticalOrigin,
+  ShadowMode,
+  ScreenSpaceEventType
+} from "cesium";
 
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 
-Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNzZiZGUxYS0zNDQwLTQxOWEtOTUxYy02ZTMzY2JmMTgwMGEiLCJpZCI6MTEwMDQwLCJpYXQiOjE3MzY0Mjc5MjJ9.rNoNK8m6dDeKhtghIr8p0sOYz3uuxYq_yFnhHNOFbas';
+Ion.defaultAccessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhNzZiZGUxYS0zNDQwLTQxOWEtOTUxYy02ZTMzY2JmMTgwMGEiLCJpZCI6MTEwMDQwLCJpYXQiOjE3MzY0Mjc5MjJ9.rNoNK8m6dDeKhtghIr8p0sOYz3uuxYq_yFnhHNOFbas";
 
 const viewerOptions = {
   timeline: false,
@@ -18,8 +27,13 @@ const viewerOptions = {
   navigationHelpButton: false,
   sceneModePicker: false,
   infoBox: false,
-  selectionIndicator: false, 
+  selectionIndicator: false,
+  shadows: true,
+  terrainShadows: ShadowMode.ENABLED,
+ // shouldAnimate: true,
 };
+
+const projectCenter = Cartesian3.fromDegrees(4.324704, 51.176033, 300); // bird's-eye height
 
 const cameraViews = {
   toren1: {
@@ -31,7 +45,7 @@ const cameraViews = {
     },
   },
   toren2: {
-    destination: Cartesian3.fromDegrees(4.3147, 51.1700, 150),
+    destination: Cartesian3.fromDegrees(4.3147, 51.17, 150),
     orientation: {
       heading: CesiumMath.toRadians(90),
       pitch: CesiumMath.toRadians(-20),
@@ -39,16 +53,22 @@ const cameraViews = {
     },
   },
   toren3: {
-    destination: Cartesian3.fromDegrees(4.3340, 51.1800, 120),
+    destination: Cartesian3.fromDegrees(4.334, 51.18, 120),
     orientation: {
       heading: CesiumMath.toRadians(135),
       pitch: CesiumMath.toRadians(-25),
       roll: 0,
     },
   },
+  toren5: {
+    destination: Cartesian3.fromDegrees(4.324704, 51.17605, 200),
+    orientation: {
+      heading: CesiumMath.toRadians(45),
+      pitch: CesiumMath.toRadians(-30),
+      roll: 0,
+    },
+  },
 };
-
-
 
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
@@ -58,34 +78,53 @@ export default function CesiumViewer() {
 
   useEffect(() => {
     IonResource.fromAssetId(2275207).then(setTilesetUrl);
+  }, []);
+
+
+  const handleTilesetReady = () => {
+
+
     fetch("/markers.json")
       .then((res) => res.json())
       .then(setMarkers)
       .catch(console.error);
-  }, []);
-
-
-
-  
+    const viewer = viewerRef.current?.cesiumElement;
+    if (viewer) {
+      viewer.camera.setView({
+        destination: projectCenter,
+        orientation: {
+          heading: CesiumMath.toRadians(0),
+          pitch: CesiumMath.toRadians(-30),
+          roll: 0,
+        },
+      });
+    }
+  };
 
   const handleFlyTo = (view) => {
     const viewer = viewerRef.current?.cesiumElement;
     if (viewer) {
+      viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+      viewer.camera.cancelFlight();
       viewer.camera.flyTo({
         destination: view.destination,
         orientation: view.orientation,
         duration: 2.0,
       });
+       setSelectedMarker(null)
     }
   };
 
   return (
     <div className="relative w-full h-screen">
-      <Viewer ref={viewerRef} full {...viewerOptions}>
-        {tilesetUrl && <Cesium3DTileset url={tilesetUrl} />}
-
-      
-
+      <Viewer ref={viewerRef} full {...viewerOptions}   >
+        {tilesetUrl && (
+          <Cesium3DTileset
+            url={tilesetUrl}
+            shadows={ShadowMode.ENABLED}
+           onReady={handleTilesetReady} 
+          /> 
+        )}
         {markers.map((marker) => (
           <Entity
             key={marker.id}
@@ -110,6 +149,7 @@ export default function CesiumViewer() {
         <FlyToButton label="Toren 1" onClick={() => handleFlyTo(cameraViews.toren1)} />
         <FlyToButton label="Toren 2" onClick={() => handleFlyTo(cameraViews.toren2)} />
         <FlyToButton label="Toren 3" onClick={() => handleFlyTo(cameraViews.toren3)} />
+        <FlyToButton label="Toren 5" onClick={() => handleFlyTo(cameraViews.toren5)} />
       </div>
 
       {/* Popup */}
