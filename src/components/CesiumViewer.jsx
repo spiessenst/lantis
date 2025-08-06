@@ -28,12 +28,12 @@ const viewerOptions = {
   sceneModePicker: false,
   infoBox: false,
   selectionIndicator: false,
-  shadows: true,
+
   terrainShadows: ShadowMode.ENABLED,
- // shouldAnimate: true,
+ shouldAnimate: false,
 };
 
-const projectCenter = Cartesian3.fromDegrees(4.324704, 51.176033, 300); // bird's-eye height
+const projectCenter = Cartesian3.fromDegrees(4.324704, 51.176033, 600); // bird's-eye height
 
 const cameraViews = {
   toren1: {
@@ -77,7 +77,9 @@ export default function CesiumViewer() {
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
+   
     IonResource.fromAssetId(2275207).then(setTilesetUrl);
+     
   }, []);
 
 
@@ -90,11 +92,13 @@ export default function CesiumViewer() {
       .catch(console.error);
     const viewer = viewerRef.current?.cesiumElement;
     if (viewer) {
-       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 5000; 
+       viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100;
+       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 2000; 
+        viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
       viewer.camera.setView({
         destination: projectCenter,
         orientation: {
-          heading: CesiumMath.toRadians(0),
+          heading: CesiumMath.toRadians(90),
           pitch: CesiumMath.toRadians(-30),
           roll: 0,
         },
@@ -106,7 +110,7 @@ export default function CesiumViewer() {
   const handleFlyTo = (view) => {
     const viewer = viewerRef.current?.cesiumElement;
     if (viewer) {
-      viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+     
       viewer.camera.cancelFlight();
       viewer.camera.flyTo({
         destination: view.destination,
