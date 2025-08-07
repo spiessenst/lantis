@@ -112,7 +112,7 @@ export default function CesiumViewer() {
     if (!viewer) return;
 
     // Configure camera controls
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 300;
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
     viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     
@@ -133,8 +133,6 @@ const handleFlyTo = (view) => {
   // Cancel current camera movement
   viewer.camera.cancelFlight();
 
-  // Disable automated pitch/collision/terrain behavior
-  viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
   // Manually fly to the position
   viewer.camera.flyTo({
