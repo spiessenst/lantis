@@ -9,6 +9,8 @@ import {
   VerticalOrigin,
   ShadowMode,
   ScreenSpaceEventType,
+  Matrix4,
+  EasingFunction,
 } from "cesium";
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
@@ -104,6 +106,8 @@ export default function CesiumViewer() {
   }, []);
 
   const handleTilesetReady = () => {
+
+    console.log("Tileset is ready");
     const viewer = viewerRef.current?.cesiumElement;
     if (!viewer) return;
 
@@ -122,18 +126,30 @@ export default function CesiumViewer() {
       },
     });
   };
+const handleFlyTo = (view) => {
+  const viewer = viewerRef.current?.cesiumElement;
+  if (!viewer) return;
 
-  const handleFlyTo = (view) => {
-    const viewer = viewerRef.current?.cesiumElement;
-    if (viewer) {
-      viewer.camera.cancelFlight();
-      viewer.camera.flyTo({
-        ...view,
-        duration: 2.0,
-      });
-      setSelectedMarker(null);
-    }
-  };
+  // Cancel current camera movement
+  viewer.camera.cancelFlight();
+
+  // Disable automated pitch/collision/terrain behavior
+  viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+  // Manually fly to the position
+  viewer.camera.flyTo({
+    destination: view.destination,
+    orientation: {
+      heading: view.orientation.heading,
+      pitch: view.orientation.pitch,
+      roll: view.orientation.roll,
+    },
+    duration: 2,
+   
+  });
+
+  setSelectedMarker(null);
+};
 
   const resetView = () => {
     handleFlyTo({
@@ -197,7 +213,7 @@ export default function CesiumViewer() {
               image: "/marker.svg",
               verticalOrigin: VerticalOrigin.BOTTOM,
               scale: 1,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            
             }}
             onClick={() => setSelectedMarker(marker)}
           />
@@ -211,14 +227,14 @@ export default function CesiumViewer() {
           onClick={resetView}
           aria-label="Reset camera to default view"
         />
-        {Object.entries(CAMERA_VIEWS).map(([key, view]) => (
-          <FlyToButton
-            key={key}
-            label={`POI ${key.slice(-1)}`}
-            onClick={() => handleFlyTo(view)}
-            aria-label={`Fly to view ${key}`}
-          />
-        ))}
+         {/* Fly-to Buttons */}
+     
+        <FlyToButton label="Toren 1" onClick={() => handleFlyTo(CAMERA_VIEWS.toren1)} />
+        <FlyToButton label="Toren 2" onClick={() => handleFlyTo(CAMERA_VIEWS.toren2)} />
+        <FlyToButton label="Toren 3" onClick={() => handleFlyTo(CAMERA_VIEWS.toren3)} />
+        <FlyToButton label="Toren 5" onClick={() => handleFlyTo(CAMERA_VIEWS.toren5)} />
+    
+
       </div>
 
       {/* Marker Popup */}
