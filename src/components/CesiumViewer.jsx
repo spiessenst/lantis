@@ -1,6 +1,6 @@
 // src/components/CesiumViewer.jsx
 import { useEffect, useRef, useState } from "react";
-import { Viewer, Cesium3DTileset, Entity } from "resium";
+import { Viewer, Cesium3DTileset, Entity , GeoJsonDataSource} from "resium";
 import {
   Cartesian3,
   Ion,
@@ -9,11 +9,13 @@ import {
   VerticalOrigin,
   ShadowMode,
   ScreenSpaceEventType,
-  Matrix4,
-  EasingFunction,
+  Color,
+  IonGeocodeProviderType
+
 } from "cesium";
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
+import TreeSpawner from "./TreeSpawner";
 
 // Cesium Ion Token
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
@@ -21,10 +23,11 @@ Ion.defaultAccessToken = ION_TOKEN;
 
 // Viewer Configuration
 const VIEWER_OPTIONS = {
+ 
   timeline: false,
   animation: false,
   baseLayerPicker: false,
-  geocoder: false,
+  geocoder: IonGeocodeProviderType.GOOGLE,
   fullscreenButton: false,
   homeButton: false,
   navigationHelpButton: false,
@@ -33,6 +36,7 @@ const VIEWER_OPTIONS = {
   selectionIndicator: false,
   terrainShadows: ShadowMode.ENABLED,
   shouldAnimate: false,
+  
 };
 
 // Project Center and Camera Views
@@ -73,6 +77,8 @@ const CAMERA_VIEWS = {
   },
 };
 
+
+
 // Main Tileset Asset ID
 const TILESET_ASSET_ID = 2275207;
 
@@ -83,6 +89,7 @@ export default function CesiumViewer() {
   const [markers, setMarkers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [geoJsonData, setGeoJsonData] = useState(null);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -105,6 +112,26 @@ export default function CesiumViewer() {
     loadResources();
   }, []);
 
+
+   useEffect(() => {
+      const loadGeoJson = async () => {
+        try {
+          const resource = await IonResource.fromAssetId(2988907);
+          const geojson = await resource.fetchJson();
+     setGeoJsonData(geojson);
+        } catch (err) {
+          console.error("Failed to load or process GeoJSON:", err);
+        }
+        finally {
+          console.log("GeoJSON data loaded:", geoJsonData);
+          
+       }
+       
+      };
+  
+      loadGeoJson();
+    }, []);
+
   const handleTilesetReady = () => {
 
     console.log("Tileset is ready");
@@ -112,6 +139,7 @@ export default function CesiumViewer() {
     if (!viewer) return;
 
     // Configure camera controls
+   // viewer.scene.globe.show = false;
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
     viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -191,9 +219,22 @@ const handleFlyTo = (view) => {
   return (
     <div className="relative w-full h-screen">
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
+
+             <GeoJsonDataSource
+                  data={geoJsonData}
+                  stroke={Color.YELLOW}
+                  fill={Color.YELLOW.withAlpha(0.2)}
+                  strokeWidth={2}
+                  clampToGround={true}
+       
+                />
         {tilesetUrl && (
           <Cesium3DTileset
             url={tilesetUrl}
+            onlyUsingWithGoogleGeocoder={true}
+            //test
+            maximumScreenSpaceError={16}
+            maximumMemoryUsage={512}
             shadows={ShadowMode.ENABLED}
             onReady={handleTilesetReady}
           />
@@ -216,6 +257,8 @@ const handleFlyTo = (view) => {
             onClick={() => setSelectedMarker(marker)}
           />
         ))}
+
+
       </Viewer>
 
       {/* Navigation Controls */}
@@ -234,6 +277,8 @@ const handleFlyTo = (view) => {
     
 
       </div>
+
+
 
       {/* Marker Popup */}
       <MarkerPopup 
