@@ -1,6 +1,6 @@
 // src/components/CesiumViewer.jsx
 import { useEffect, useRef, useState } from "react";
-import { Viewer, Cesium3DTileset, Entity , GeoJsonDataSource} from "resium";
+import { Viewer, Cesium3DTileset, Entity } from "resium";
 import {
   Cartesian3,
   Ion,
@@ -10,12 +10,18 @@ import {
   ShadowMode,
   ScreenSpaceEventType,
   Color,
-  IonGeocodeProviderType
+  IonGeocodeProviderType,
+  ClippingPolygonCollection,
+  ClippingPolygon,
+  defined,
+  GeoJsonDataSource
+  
 
 } from "cesium";
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import TreeSpawner from "./TreeSpawner";
+
 
 // Cesium Ion Token
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
@@ -35,8 +41,7 @@ const VIEWER_OPTIONS = {
   infoBox: false,
   selectionIndicator: false,
   terrainShadows: ShadowMode.ENABLED,
-  shouldAnimate: false,
-  
+  shouldAnimate: false, 
 };
 
 // Project Center and Camera Views
@@ -77,8 +82,6 @@ const CAMERA_VIEWS = {
   },
 };
 
-
-
 // Main Tileset Asset ID
 const TILESET_ASSET_ID = 2275207;
 
@@ -90,6 +93,30 @@ export default function CesiumViewer() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [geoJsonData, setGeoJsonData] = useState(null);
+  const [clipping, setClipping] = useState(null);
+
+const loadGeoJsonFromIon = async (viewer) => {
+  try {
+    const resource = await IonResource.fromAssetId(3609636); // Replace with your actual asset ID
+    const dataSource = await GeoJsonDataSource.load(resource, {
+      clampToGround: true
+    });
+    viewer.dataSources.add(dataSource);
+
+    console.log("GeoJSON loaded");
+    return dataSource;
+  } catch (err) {
+    console.error("Failed to load or process GeoJSON:", err);
+  }
+};
+
+     useEffect(() => {
+   if (!viewerRef.current) return;
+  const viewer = viewerRef.current.cesiumElement;
+  if (!viewer) return;
+
+  loadGeoJsonFromIon(viewer);
+    }, []);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -113,24 +140,7 @@ export default function CesiumViewer() {
   }, []);
 
 
-   useEffect(() => {
-      const loadGeoJson = async () => {
-        try {
-          const resource = await IonResource.fromAssetId(2988907);
-          const geojson = await resource.fetchJson();
-     setGeoJsonData(geojson);
-        } catch (err) {
-          console.error("Failed to load or process GeoJSON:", err);
-        }
-        finally {
-          console.log("GeoJSON data loaded:", geoJsonData);
-          
-       }
-       
-      };
-  
-      loadGeoJson();
-    }, []);
+
 
   const handleTilesetReady = () => {
 
@@ -139,10 +149,10 @@ export default function CesiumViewer() {
     if (!viewer) return;
 
     // Configure camera controls
-   // viewer.scene.globe.show = false;
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
-    viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
-    viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        // viewer.scene.globe.show = false;
+           viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
+            viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
+            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     
     // Set initial view
     viewer.camera.setView({
@@ -153,6 +163,9 @@ export default function CesiumViewer() {
         roll: 0,
       },
     });
+
+
+
   };
 const handleFlyTo = (view) => {
   const viewer = viewerRef.current?.cesiumElement;
@@ -220,14 +233,7 @@ const handleFlyTo = (view) => {
     <div className="relative w-full h-screen">
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
 
-             <GeoJsonDataSource
-                  data={geoJsonData}
-                  stroke={Color.YELLOW}
-                  fill={Color.YELLOW.withAlpha(0.2)}
-                  strokeWidth={2}
-                  clampToGround={true}
-       
-                />
+           
         {tilesetUrl && (
           <Cesium3DTileset
             url={tilesetUrl}
@@ -236,7 +242,9 @@ const handleFlyTo = (view) => {
             maximumScreenSpaceError={16}
             maximumMemoryUsage={512}
             shadows={ShadowMode.ENABLED}
+            clippingPolygons={clipping}
             onReady={handleTilesetReady}
+             
           />
         )}
         {markers.map((marker) => (
@@ -258,7 +266,7 @@ const handleFlyTo = (view) => {
           />
         ))}
 
-
+ 
       </Viewer>
 
       {/* Navigation Controls */}
