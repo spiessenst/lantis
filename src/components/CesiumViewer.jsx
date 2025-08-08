@@ -15,7 +15,6 @@ import {
   ClippingPolygon,
   defined,
   GeoJsonDataSource
-  
 
 } from "cesium";
 import FlyToButton from "./FlyToButton";
@@ -95,28 +94,10 @@ export default function CesiumViewer() {
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [clipping, setClipping] = useState(null);
 
-const loadGeoJsonFromIon = async (viewer) => {
-  try {
-    const resource = await IonResource.fromAssetId(3609636); // Replace with your actual asset ID
-    const dataSource = await GeoJsonDataSource.load(resource, {
-      clampToGround: true
-    });
-    viewer.dataSources.add(dataSource);
 
-    console.log("GeoJSON loaded");
-    return dataSource;
-  } catch (err) {
-    console.error("Failed to load or process GeoJSON:", err);
-  }
-};
+ 
 
-     useEffect(() => {
-   if (!viewerRef.current) return;
-  const viewer = viewerRef.current.cesiumElement;
-  if (!viewer) return;
 
-  loadGeoJsonFromIon(viewer);
-    }, []);
 
   useEffect(() => {
     const loadResources = async () => {
@@ -140,6 +121,48 @@ const loadGeoJsonFromIon = async (viewer) => {
   }, []);
 
 
+   
+
+    
+    const loadGeoJsonFromIon = async (viewer) => {
+    
+    
+  if (!viewer) return;
+let footprint = null;
+  try {
+    
+    // Load GeoJSON from Cesium Ion using the asset ID    
+    const resource = await IonResource.fromAssetId(3609636);
+   
+  const dataSource = await GeoJsonDataSource.load(resource , {
+    clampToGround: true,} );
+
+    
+
+      footprint = dataSource.entities.values.find((entity) =>
+    defined(entity.polygon),
+    
+  );
+  footprint.polygon.outline = true;
+
+  const positions = footprint.polygon.hierarchy.getValue().positions;
+
+const clippingPolygons = new ClippingPolygonCollection({
+  polygons: [
+    new ClippingPolygon({
+      positions: positions,
+    }),
+  ], 
+});
+setClipping(clippingPolygons);
+  } catch (err) {
+    console.error("Failed to load or process GeoJSON:", err);
+  }
+   
+  };
+   
+ 
+
 
 
   const handleTilesetReady = () => {
@@ -149,7 +172,7 @@ const loadGeoJsonFromIon = async (viewer) => {
     if (!viewer) return;
 
     // Configure camera controls
-        // viewer.scene.globe.show = false;
+         viewer.scene.globe.show = false;
            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
             viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -164,7 +187,7 @@ const loadGeoJsonFromIon = async (viewer) => {
       },
     });
 
-
+loadGeoJsonFromIon(viewer);
 
   };
 const handleFlyTo = (view) => {
