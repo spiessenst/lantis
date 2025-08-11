@@ -2,11 +2,11 @@
   {
     "id": "marker-1",
     "name": "Toren 1",
-    "description": "Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone. De constructie van de toren is een voorbeeld van duurzame architectuur en innovatieve engineering. Bezoekers kunnen hier informatie verkrijgen over de voortgang van de werken en de toekomstige ontwikkelingen in de regio.",
+    "description": "Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone. De constructie van de toren is een voorbeeld van duurzame architectuur en innovatieve engineering. Bezoekers kunnen hier informatie verkrijgen over de voortgang van de werken en de toekomstige ontwikkelingen in de regio.",
     "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.324704,
-    "latitude": 51.176033,
-    "height": 60,
+    "longitude": 4.3661591526447845,
+    "latitude": 51.23432010335795,
+    "height": 50,
     "color": "GREEN",
     "size": 10
   },
@@ -15,9 +15,9 @@
     "name": "Toren 2",
     "description": "Toren 2 markeert de zuidgrens van het project en fungeert als logistiek centrum voor materiaalopslag. De toren is voorzien van moderne infrastructuur voor communicatie en monitoring. Daarnaast worden hier ook regelmatig werfvergaderingen gehouden. De omliggende zone wordt in de toekomst ingericht als groenzone met wandel- en fietspaden die aansluiten op het grotere mobiliteitsplan.",
     "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.314700,
-    "latitude": 51.170000,
-    "height": 80,
+    "longitude": 4.364,
+    "latitude": 51.230,
+    "height": 50,
     "color": "GREEN",
     "size": 12
   },
@@ -26,9 +26,9 @@
     "name": "Toren 3",
     "description": "Toren 3 bevindt zich nabij een kruispunt van belangrijke verkeersassen en speelt een cruciale rol in het monitoren van verkeersstromen. Dankzij geavanceerde sensoren en camera’s wordt hier data verzameld over verkeer en luchtkwaliteit. Deze data wordt in real-time gedeeld met de centrale controlekamer, die beslissingen neemt over verkeersgeleiding en tijdelijke omleidingen.",
     "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.334000,
-    "latitude": 51.180000,
-    "height": 100,
+    "longitude": 4.3695,
+    "latitude": 51.235,
+    "height": 50,
     "color": "GREEN",
     "size": 14
   },
@@ -37,21 +37,20 @@
     "name": "Toren 4",
     "description": "Toren 4 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
     "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.320000,
-    "latitude": 51.165000,
-    "height": 70,
+    "longitude": 4.361,
+    "latitude": 51.233,
+    "height": 50,
     "color": "GREEN",
     "size": 11
   },
-
-    {
+  {
     "id": "marker-5",
     "name": "Toren 5",
     "description": "Toren 5 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
     "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.320050,
-    "latitude": 51.165000,
-    "height": 200,
+    "longitude": 4.3645,
+    "latitude": 51.238,
+    "height": 50,
     "color": "GREEN",
     "size": 11
   }

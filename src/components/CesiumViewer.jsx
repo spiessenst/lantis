@@ -14,16 +14,19 @@ import {
   ClippingPolygonCollection,
   ClippingPolygon,
   defined,
-  GeoJsonDataSource
+  GeoJsonDataSource,
+  Ellipsoid
 
 } from "cesium";
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import TreeSpawner from "./TreeSpawner";
+import CameraLogger from "./CameraLogger";
 
 
 // Cesium Ion Token
-const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
+//const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
+const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs"
 Ion.defaultAccessToken = ION_TOKEN;
 
 // Viewer Configuration
@@ -44,110 +47,88 @@ const VIEWER_OPTIONS = {
 };
 
 // Project Center and Camera Views
-const PROJECT_CENTER = Cartesian3.fromDegrees(4.324704, 51.176033, 600);
+//const PROJECT_CENTER = Cartesian3.fromDegrees(4.324704, 51.176033, 600);
 
 const CAMERA_VIEWS = {
-  toren1: {
-    destination: Cartesian3.fromDegrees(4.324704, 51.176033, 100),
-    orientation: {
-      heading: CesiumMath.toRadians(45),
-      pitch: CesiumMath.toRadians(-30),
-      roll: 0,
-    },
-  },
-  toren2: {
-    destination: Cartesian3.fromDegrees(4.3147, 51.17, 150),
-    orientation: {
-      heading: CesiumMath.toRadians(90),
-      pitch: CesiumMath.toRadians(-20),
-      roll: 0,
-    },
-  },
-  toren3: {
-    destination: Cartesian3.fromDegrees(4.334, 51.18, 120),
-    orientation: {
-      heading: CesiumMath.toRadians(135),
-      pitch: CesiumMath.toRadians(-25),
-      roll: 0,
-    },
-  },
-  toren5: {
-    destination: Cartesian3.fromDegrees(4.324704, 51.17605, 200),
-    orientation: {
-      heading: CesiumMath.toRadians(45),
-      pitch: CesiumMath.toRadians(-30),
-      roll: 0,
-    },
-  },
+
 };
 
 // Main Tileset Asset ID
 const TILESET_ASSET_ID = 2275207;
+const MODEL_ASSET_ID = 3612039;
 
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const [tilesetUrl, setTilesetUrl] = useState(null);
+  const [ModelUrl, setModelUrl] = useState(null);
+  const [ModelUrl2, setModelUrl2] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [markers, setMarkers] = useState([]);
+  const [views, setViews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [geoJsonData, setGeoJsonData] = useState(null);
   const [clipping, setClipping] = useState(null);
-
-
- 
-
-
 
   useEffect(() => {
     const loadResources = async () => {
       try {
         setIsLoading(true);
+        // google tilesset
         const url = await IonResource.fromAssetId(TILESET_ASSET_ID);
         setTilesetUrl(url);
+
+        //model
+        const Url1 = await IonResource.fromAssetId(MODEL_ASSET_ID);
+        setModelUrl(Url1);
+
+        const Url2 = await IonResource.fromAssetId(3617044);
+        setModelUrl2(Url2);
         
         const response = await fetch("/markers.json");
         if (!response.ok) throw new Error("Failed to load markers");
+     
+    
         setMarkers(await response.json());
+        
+     const responseview = await fetch("/views.json");
+
+if (!responseview.ok) throw new Error("Failed to load views");
+
+const loadedViews = await responseview.json();
+setViews(loadedViews);
+console.log("Views loaded:", loadedViews)
+
       } catch (err) {
         console.error("Loading error:", err);
         setError(err.message);
       } finally {
-        setIsLoading(false);
+     
+         setIsLoading(false);
       }
     };
 
     loadResources();
   }, []);
 
-
+  const loadGeoJsonFromIon = async (viewer) => {
    
-
-    
-    const loadGeoJsonFromIon = async (viewer) => {
-    
-    
   if (!viewer) return;
-let footprint = null;
+      let footprint = null;
   try {
     
     // Load GeoJSON from Cesium Ion using the asset ID    
     const resource = await IonResource.fromAssetId(3609636);
-   
-  const dataSource = await GeoJsonDataSource.load(resource , {
+    const dataSource = await GeoJsonDataSource.load(resource , {
     clampToGround: true,} );
 
-    
-
       footprint = dataSource.entities.values.find((entity) =>
-    defined(entity.polygon),
-    
-  );
+        defined(entity.polygon),
+    );
   footprint.polygon.outline = true;
 
   const positions = footprint.polygon.hierarchy.getValue().positions;
 
-const clippingPolygons = new ClippingPolygonCollection({
+  const clippingPolygons = new ClippingPolygonCollection({
   polygons: [
     new ClippingPolygon({
       positions: positions,
@@ -158,13 +139,9 @@ setClipping(clippingPolygons);
   } catch (err) {
     console.error("Failed to load or process GeoJSON:", err);
   }
-   
-  };
+};
    
  
-
-
-
   const handleTilesetReady = () => {
 
     console.log("Tileset is ready");
@@ -173,23 +150,22 @@ setClipping(clippingPolygons);
 
     // Configure camera controls
          viewer.scene.globe.show = false;
-           viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
-            viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
-            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+          viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
+          viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
+          viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+          viewer.resolutionScale = 0.75;
     
     // Set initial view
+  const firstView = Object.values(views)[0];
+  if (firstView) {
     viewer.camera.setView({
-      destination: PROJECT_CENTER,
-      orientation: {
-        heading: CesiumMath.toRadians(90),
-        pitch: CesiumMath.toRadians(-30),
-        roll: 0,
-      },
+      destination: Cartesian3.fromDegrees(...firstView.destination),
+      orientation: firstView.orientation,
     });
+  }
+//loadGeoJsonFromIon(viewer);
+};
 
-loadGeoJsonFromIon(viewer);
-
-  };
 const handleFlyTo = (view) => {
   const viewer = viewerRef.current?.cesiumElement;
   if (!viewer) return;
@@ -197,18 +173,12 @@ const handleFlyTo = (view) => {
   // Cancel current camera movement
   viewer.camera.cancelFlight();
 
-
   // Manually fly to the position
-  viewer.camera.flyTo({
-    destination: view.destination,
-    orientation: {
-      heading: view.orientation.heading,
-      pitch: view.orientation.pitch,
-      roll: view.orientation.roll,
-    },
-    duration: 2,
-   
-  });
+ viewer.camera.flyTo({
+  destination: Cartesian3.fromDegrees(...view.destination),
+  orientation: { ...view.orientation },
+  duration: 2,
+});
 
   setSelectedMarker(null);
 };
@@ -223,6 +193,7 @@ const handleFlyTo = (view) => {
       }
     });
   };
+
 
   if (error) {
     return (
@@ -262,11 +233,40 @@ const handleFlyTo = (view) => {
             url={tilesetUrl}
             onlyUsingWithGoogleGeocoder={true}
             //test
-            maximumScreenSpaceError={16}
-            maximumMemoryUsage={512}
+            maximumScreenSpaceError={32}
+            maximumMemoryUsage={128}
             shadows={ShadowMode.ENABLED}
             clippingPolygons={clipping}
             onReady={handleTilesetReady}
+             
+          />
+        )}
+
+
+        {ModelUrl && (
+          <Cesium3DTileset
+            url={ModelUrl}
+            //onlyUsingWithGoogleGeocoder={true}
+            //test
+            maximumScreenSpaceError={64}
+            maximumMemoryUsage={128}
+            shadows={ShadowMode.ENABLED}
+            //clippingPolygons={clipping}
+           // onReady={handleTilesetReady}
+             
+          />
+        )}
+
+          {ModelUrl2 && (
+          <Cesium3DTileset
+            url={ModelUrl2}
+            //onlyUsingWithGoogleGeocoder={true}
+            //test
+            maximumScreenSpaceError={16}
+            maximumMemoryUsage={512}
+            //shadows={ShadowMode.ENABLED}
+            //clippingPolygons={clipping}
+           // onReady={handleTilesetReady}
              
           />
         )}
@@ -288,26 +288,23 @@ const handleFlyTo = (view) => {
             onClick={() => setSelectedMarker(marker)}
           />
         ))}
-
- 
       </Viewer>
 
-      {/* Navigation Controls */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
-        <FlyToButton 
-          label="Overview" 
-          onClick={resetView}
-          aria-label="Reset camera to default view"
-        />
-         {/* Fly-to Buttons */}
-     
-        <FlyToButton label="Toren 1" onClick={() => handleFlyTo(CAMERA_VIEWS.toren1)} />
-        <FlyToButton label="Toren 2" onClick={() => handleFlyTo(CAMERA_VIEWS.toren2)} />
-        <FlyToButton label="Toren 3" onClick={() => handleFlyTo(CAMERA_VIEWS.toren3)} />
-        <FlyToButton label="Toren 5" onClick={() => handleFlyTo(CAMERA_VIEWS.toren5)} />
-    
+    {/* Navigation Controls */}
+<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
 
-      </div>
+
+  {Object.entries(views).map(([name, view]) => (
+    <FlyToButton
+      key={name}
+      label={name.charAt(0).toUpperCase() + name.slice(1)}
+      onClick={() => handleFlyTo(view)}
+    />
+  ))}
+
+  {/* Special Log View button */}
+  <CameraLogger viewerRef={viewerRef} label="Log View" />
+</div>
 
 
 
