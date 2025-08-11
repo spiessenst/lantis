@@ -1,4 +1,5 @@
 [
-  { "id": "model1", "assetId": 3612039, "maximumScreenSpaceError": 64 },
-  { "id": "model2", "assetId": 3617044, "maximumScreenSpaceError": 64 }
+  { "id": "model1", "assetId": 3612039, "maximumScreenSpaceError": 32 },
+    { "id": "model3", "assetId": 3617878, "maximumScreenSpaceError": 32 },
+  { "id": "model2", "assetId": 3617044, "maximumScreenSpaceError": 32 }
 ]

@@ -15,7 +15,8 @@ import {
   ClippingPolygon,
   defined,
   GeoJsonDataSource,
-  Ellipsoid
+  Ellipsoid,
+  ColorMaterialProperty
 
 } from "cesium";
 import FlyToButton from "./FlyToButton";
@@ -97,7 +98,7 @@ if (!responseview.ok) throw new Error("Failed to load views");
 
 const loadedViews = await responseview.json();
 setViews(loadedViews);
-console.log("Views loaded:", loadedViews)
+
 
       } catch (err) {
         console.error("Loading error:", err);
@@ -118,10 +119,13 @@ console.log("Views loaded:", loadedViews)
   try {
     
     // Load GeoJSON from Cesium Ion using the asset ID    
-    const resource = await IonResource.fromAssetId(3617197);
-    const dataSource = await GeoJsonDataSource.load(resource , {
-    clampToGround: true,} );
-
+    const resource = await IonResource.fromAssetId(3617274);
+    const dataSource = await GeoJsonDataSource.load(resource, {
+      clampToGround: true,
+    
+    });
+   // viewer.dataSources.add(dataSource);
+    
       footprint = dataSource.entities.values.find((entity) =>
         defined(entity.polygon),
     );
@@ -143,9 +147,8 @@ setClipping(clippingPolygons);
 };
    
  
-  const handleTilesetReady = () => {
-
-    console.log("Tileset is ready");
+  const handleTilesetReady =  () => {
+  
     const viewer = viewerRef.current?.cesiumElement;
     if (!viewer) return;
 
@@ -154,7 +157,7 @@ setClipping(clippingPolygons);
           viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
           viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
           viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-         //viewer.resolutionScale = 0.75;
+         viewer.resolutionScale = 0.75;
     
     // Set initial view
   const firstView = Object.values(views)[0];
@@ -164,7 +167,7 @@ setClipping(clippingPolygons);
       orientation: firstView.orientation,
     });
   }
-//loadGeoJsonFromIon(viewer);
+loadGeoJsonFromIon(viewer);
 };
 
 const handleFlyTo = (view) => {
@@ -242,7 +245,7 @@ const handleFlyTo = (view) => {
     maximumMemoryUsage={512}
     preloadWhenHidden={false}
     skipScreenSpaceErrorFactor={128}
-    //shadows={ShadowMode.ENABLED}
+    shadows={ShadowMode.ENABLED}
   />
 ))}
 
