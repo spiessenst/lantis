@@ -46,22 +46,15 @@ const VIEWER_OPTIONS = {
   shouldAnimate: false, 
 };
 
-// Project Center and Camera Views
-//const PROJECT_CENTER = Cartesian3.fromDegrees(4.324704, 51.176033, 600);
-
-const CAMERA_VIEWS = {
-
-};
 
 // Main Tileset Asset ID
 const TILESET_ASSET_ID = 2275207;
-const MODEL_ASSET_ID = 3612039;
+
 
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const [tilesetUrl, setTilesetUrl] = useState(null);
-  const [ModelUrl, setModelUrl] = useState(null);
-  const [ModelUrl2, setModelUrl2] = useState(null);
+const [models, setModels] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [views, setViews] = useState([]);
@@ -77,12 +70,20 @@ export default function CesiumViewer() {
         const url = await IonResource.fromAssetId(TILESET_ASSET_ID);
         setTilesetUrl(url);
 
-        //model
-        const Url1 = await IonResource.fromAssetId(MODEL_ASSET_ID);
-        setModelUrl(Url1);
+       // Load models.json file
+      const modelsResponse = await fetch("/models.json");
+      if (!modelsResponse.ok) throw new Error("Failed to load models");
+      const modelsData = await modelsResponse.json();
 
-        const Url2 = await IonResource.fromAssetId(3617044);
-        setModelUrl2(Url2);
+      // Resolve asset URLs for all models
+      const modelsWithUrls = await Promise.all(
+        modelsData.map(async (model) => {
+          const modelUrl = await IonResource.fromAssetId(model.assetId);
+          return { ...model, url: modelUrl };
+        })
+      );
+
+      setModels(modelsWithUrls);
         
         const response = await fetch("/markers.json");
         if (!response.ok) throw new Error("Failed to load markers");
@@ -117,7 +118,7 @@ console.log("Views loaded:", loadedViews)
   try {
     
     // Load GeoJSON from Cesium Ion using the asset ID    
-    const resource = await IonResource.fromAssetId(3609636);
+    const resource = await IonResource.fromAssetId(3617197);
     const dataSource = await GeoJsonDataSource.load(resource , {
     clampToGround: true,} );
 
@@ -153,7 +154,7 @@ setClipping(clippingPolygons);
           viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
           viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
           viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-          viewer.resolutionScale = 0.75;
+         //viewer.resolutionScale = 0.75;
     
     // Set initial view
   const firstView = Object.values(views)[0];
@@ -183,16 +184,6 @@ const handleFlyTo = (view) => {
   setSelectedMarker(null);
 };
 
-  const resetView = () => {
-    handleFlyTo({
-      destination: PROJECT_CENTER,
-      orientation: {
-        heading: CesiumMath.toRadians(90),
-        pitch: CesiumMath.toRadians(-30),
-        roll: 0,
-      }
-    });
-  };
 
 
   if (error) {
@@ -234,7 +225,7 @@ const handleFlyTo = (view) => {
             onlyUsingWithGoogleGeocoder={true}
             //test
             maximumScreenSpaceError={32}
-            maximumMemoryUsage={128}
+            maximumMemoryUsage={512}
             shadows={ShadowMode.ENABLED}
             clippingPolygons={clipping}
             onReady={handleTilesetReady}
@@ -243,33 +234,18 @@ const handleFlyTo = (view) => {
         )}
 
 
-        {ModelUrl && (
-          <Cesium3DTileset
-            url={ModelUrl}
-            //onlyUsingWithGoogleGeocoder={true}
-            //test
-            maximumScreenSpaceError={64}
-            maximumMemoryUsage={128}
-            shadows={ShadowMode.ENABLED}
-            //clippingPolygons={clipping}
-           // onReady={handleTilesetReady}
-             
-          />
-        )}
+     {models && models.map(({ id, url, maximumScreenSpaceError }) => (
+  <Cesium3DTileset
+    key={id}
+    url={url}
+    maximumScreenSpaceError={maximumScreenSpaceError}
+    maximumMemoryUsage={512}
+    preloadWhenHidden={false}
+    skipScreenSpaceErrorFactor={128}
+    //shadows={ShadowMode.ENABLED}
+  />
+))}
 
-          {ModelUrl2 && (
-          <Cesium3DTileset
-            url={ModelUrl2}
-            //onlyUsingWithGoogleGeocoder={true}
-            //test
-            maximumScreenSpaceError={16}
-            maximumMemoryUsage={512}
-            //shadows={ShadowMode.ENABLED}
-            //clippingPolygons={clipping}
-           // onReady={handleTilesetReady}
-             
-          />
-        )}
         {markers.map((marker) => (
           <Entity
             key={marker.id}
