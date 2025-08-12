@@ -257,7 +257,7 @@ const handleFlyTo = (view) => {
       <div className="w-full h-screen flex items-center justify-center bg-blue-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-blue-600">Loading 3D Map...</p>
+          <p className="mt-4 text-blue-600">Laden 3D Map...</p>
         </div>
       </div>
     );
