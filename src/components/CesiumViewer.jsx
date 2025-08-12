@@ -21,9 +21,9 @@ import {
 } from "cesium";
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
-import TreeSpawner from "./TreeSpawner";
+
 import CameraLogger from "./CameraLogger";
-import PanoramaPoints from "./PanoramaPoints";
+
 import PanoramaViewer from "./PanoramaViewer";
 
 
@@ -191,7 +191,7 @@ const handleTilesetReady = () => {
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
     viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    viewer.resolutionScale = 0.75;
+    //viewer.resolutionScale = 0.75;
 
     // If we have at least one view, set it as the initial view
     if (views && Object.keys(views).length > 0) {
@@ -305,9 +305,9 @@ const handleFlyTo = (view) => {
               marker.height
             )}
             billboard={{
-              image: "/marker.svg",
+              image: "/green_marker.svg",
               verticalOrigin: VerticalOrigin.BOTTOM,
-              scale: 1,
+              scale: 0.3,
             }}
             onClick={() => setSelectedMarker(marker)}
           />
@@ -323,9 +323,9 @@ const handleFlyTo = (view) => {
       pano.height
     )}
     billboard={{
-      image: "/panorama-icon.svg", // the icon we made earlier
+      image: "/blue_marker.svg", // the icon we made earlier
       verticalOrigin: VerticalOrigin.BOTTOM,
-      scale: 0.8
+      scale: 0.3
     }}
     onClick={() => {
       // Here you open the panorama viewer component

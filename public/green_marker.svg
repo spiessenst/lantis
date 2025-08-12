@@ -1,0 +1,9 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Flat mint green pin (pure rgb(147, 206, 195)) -->
+  <path d="M64 10
+           C44 10 28 26 28 46
+           C28 78 64 118 64 118
+           C64 118 100 78 100 46
+           C100 26 84 10 64 10 Z" 
+        fill="#93CEC3"/> <!-- HEX equivalent of rgb(147, 206, 195) -->
+</svg>

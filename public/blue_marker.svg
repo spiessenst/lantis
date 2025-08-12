@@ -1,0 +1,9 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Flat navy blue pin (pure rgb(26, 42, 62)) -->
+  <path d="M64 10
+           C44 10 28 26 28 46
+           C28 78 64 118 64 118
+           C64 118 100 78 100 46
+           C100 26 84 10 64 10 Z" 
+        fill="#1A2A3E"/> <!-- HEX equivalent of rgb(26, 42, 62) -->
+</svg>
