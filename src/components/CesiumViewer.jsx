@@ -23,6 +23,8 @@ import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import TreeSpawner from "./TreeSpawner";
 import CameraLogger from "./CameraLogger";
+import PanoramaPoints from "./PanoramaPoints";
+import PanoramaViewer from "./PanoramaViewer";
 
 
 // Cesium Ion Token
@@ -62,6 +64,8 @@ export default function CesiumViewer() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [clipping, setClipping] = useState(null);
+  const [panoramaPoints, setPanoramaPoints] = useState([]);
+  const [selectedPano, setSelectedPano] = useState(null);
 
   useEffect(() => {
   const loadResources = async () => {
@@ -74,6 +78,7 @@ export default function CesiumViewer() {
         fetch("/models.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load models")), // 1: models
         fetch("/markers.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load markers")), // 2: markers
         fetch("/views.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load views")), // 3: views
+        fetch("/panoramaPoints.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load panorama points")), // 4: panorama points
       ]);
 
       // Tileset URL
@@ -119,6 +124,15 @@ export default function CesiumViewer() {
         console.warn(results[3].reason);
         // No views → no crash, but can't use fly-to buttons
       }
+
+          // Panorama Points
+      if (results[4].status === "fulfilled") {
+        setPanoramaPoints(results[4].value);
+      } else {
+        console.warn(results[4].reason);
+        // No panos → no crash, but can't use Pano buttons
+      }
+
 
     } catch (err) {
       console.error("Unexpected load error:", err);
@@ -298,23 +312,54 @@ const handleFlyTo = (view) => {
             onClick={() => setSelectedMarker(marker)}
           />
         ))}
+
+        {panoramaPoints.map((pano) => (
+  <Entity
+    key={pano.id}
+    name={pano.name}
+    position={Cartesian3.fromDegrees(
+      pano.longitude,
+      pano.latitude,
+      pano.height
+    )}
+    billboard={{
+      image: "/panorama-icon.svg", // the icon we made earlier
+      verticalOrigin: VerticalOrigin.BOTTOM,
+      scale: 0.8
+    }}
+    onClick={() => {
+      // Here you open the panorama viewer component
+      setSelectedPano(pano.imageUrl); // Assuming pano.imageUrl is the image path
+   
+    
+    }}
+  />
+))}
       </Viewer>
 
-    {/* Navigation Controls */}
-<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
-  {Object.entries(views).map(([name, view]) => (
-    <FlyToButton
-      key={name}
-      label={name.charAt(0).toUpperCase() + name.slice(1)}
-      onClick={() => handleFlyTo(view)}
-    />
-  ))}
+      {selectedPano && (
+  <PanoramaViewer
+    image={selectedPano}
+    
+    onClose={() => setSelectedPano(null)}
+  />
 
-  {/* Special Log View button */}
-  <CameraLogger viewerRef={viewerRef} label="Log View" />
-</div>
+)}
 
 
+   {/* Navigation Controls - only show if pano is NOT open */}
+    {!selectedPano && (
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
+        {Object.entries(views).map(([name, view]) => (
+          <FlyToButton
+            key={name}
+            label={name.charAt(0).toUpperCase() + name.slice(1)}
+            onClick={() => handleFlyTo(view)}
+          />
+        ))}
+        <CameraLogger viewerRef={viewerRef} label="Log View" />
+      </div>
+    )}
 
       {/* Marker Popup */}
       <MarkerPopup 

@@ -1,0 +1,39 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <!-- green gradient -->
+    <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3CCB4A"></stop>
+      <stop offset="1" stop-color="#289E36"></stop>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.2"></feDropShadow>
+    </filter>
+  </defs>
+
+  <!-- map pin shape -->
+  <g filter="url(#shadow)">
+    <path d="M64 10
+             C44 10 28 26 28 46
+             C28 78 64 118 64 118
+             C64 118 100 78 100 46
+             C100 26 84 10 64 10 Z" fill="url(#grad)"></path>
+  </g>
+
+  <!-- white circle background -->
+  <circle cx="64" cy="46" r="26" fill="#ffffff"></circle>
+
+  <!-- two circular arrows to suggest 360 -->
+  <g transform="translate(64,46)">
+    <!-- upper arrow -->
+    <path d="M-12 -4 A14 14 0 0 1 12 -4" fill="none" stroke="#3CCB4A" stroke-width="3" stroke-linecap="round"></path>
+    <polygon points="12,-4 8,-8 8,0" fill="#3CCB4A"></polygon>
+    
+    <!-- lower arrow -->
+    <path d="M12 4 A14 14 0 0 1 -12 4" fill="none" stroke="#3CCB4A" stroke-width="3" stroke-linecap="round"></path>
+    <polygon points="-12,4 -8,0 -8,8" fill="#3CCB4A"></polygon>
+  </g>
+
+  <!-- 360° text -->
+  <text x="64" y="50" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#3CCB4A">360°</text>
+</svg>

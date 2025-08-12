@@ -1,0 +1,20 @@
+[
+  {
+    "id": "p1",
+    "name": "Urban Development 360 - North View",
+    "longitude": 4.3661591526447845,
+    "latitude": 51.23432010335795,
+    "height": 50,
+    "imageUrl": "/panoramas/panotest.jpg",
+    "initialYaw": 0
+  },
+  {
+    "id": "p2",
+    "name": "Urban Development 360 - South View",
+    "longitude": 4.366259152644785,
+    "latitude": 51.23422010335795,
+    "height": 50,
+    "imageUrl": "/panoramas/panotest.jpg",
+    "initialYaw": 180
+  }
+]
