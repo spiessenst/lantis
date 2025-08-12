@@ -15,7 +15,7 @@ try {
       container: containerRef.current,
       panorama: image,
       defaultYaw: 0,
-      touchmoveTwoFingers: true,
+    
       navbar: false,  // <-- this hides all default controls
       loadingImg: false, // disable default loading image
     });
