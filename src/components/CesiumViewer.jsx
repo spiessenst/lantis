@@ -1,6 +1,6 @@
 // src/components/CesiumViewer.jsx
 import { useEffect, useRef, useState } from "react";
-import { Viewer, Cesium3DTileset, Entity } from "resium";
+import { Viewer, Cesium3DTileset, Entity ,Camera } from "resium";
 import {
   Cartesian3,
   Ion,
@@ -36,7 +36,7 @@ const VIEWER_OPTIONS = {
   timeline: false,
   animation: false,
   baseLayerPicker: false,
-  geocoder: IonGeocodeProviderType.GOOGLE,
+  //geocoder: IonGeocodeProviderType.GOOGLE,
   fullscreenButton: false,
   homeButton: false,
   navigationHelpButton: false,
@@ -55,7 +55,7 @@ const TILESET_ASSET_ID = 2275207;
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const [tilesetUrl, setTilesetUrl] = useState(null);
-const [models, setModels] = useState([]);
+  const [models, setModels] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [views, setViews] = useState([]);
@@ -64,53 +64,72 @@ const [models, setModels] = useState([]);
   const [clipping, setClipping] = useState(null);
 
   useEffect(() => {
-    const loadResources = async () => {
-      try {
-        setIsLoading(true);
-        // google tilesset
-        const url = await IonResource.fromAssetId(TILESET_ASSET_ID);
-        setTilesetUrl(url);
+  const loadResources = async () => {
+    setIsLoading(true);
+    setError(null);
 
-       // Load models.json file
-      const modelsResponse = await fetch("/models.json");
-      if (!modelsResponse.ok) throw new Error("Failed to load models");
-      const modelsData = await modelsResponse.json();
+    try {
+      const results = await Promise.allSettled([
+        IonResource.fromAssetId(TILESET_ASSET_ID), // 0: tileset
+        fetch("/models.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load models")), // 1: models
+        fetch("/markers.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load markers")), // 2: markers
+        fetch("/views.json").then(r => r.ok ? r.json() : Promise.reject("Failed to load views")), // 3: views
+      ]);
 
-      // Resolve asset URLs for all models
-      const modelsWithUrls = await Promise.all(
-        modelsData.map(async (model) => {
-          const modelUrl = await IonResource.fromAssetId(model.assetId);
-          return { ...model, url: modelUrl };
-        })
-      );
-
-      setModels(modelsWithUrls);
-        
-        const response = await fetch("/markers.json");
-        if (!response.ok) throw new Error("Failed to load markers");
-     
-    
-        setMarkers(await response.json());
-        
-     const responseview = await fetch("/views.json");
-
-if (!responseview.ok) throw new Error("Failed to load views");
-
-const loadedViews = await responseview.json();
-setViews(loadedViews);
-
-
-      } catch (err) {
-        console.error("Loading error:", err);
-        setError(err.message);
-      } finally {
-     
-         setIsLoading(false);
+      // Tileset URL
+      if (results[0].status === "fulfilled") {
+        setTilesetUrl(results[0].value);
+      } else {
+        console.error(results[0].reason);
+        setError(prev => (prev ? prev + " | Tileset failed" : "Tileset failed"));
       }
-    };
 
-    loadResources();
-  }, []);
+      // Models
+      if (results[1].status === "fulfilled") {
+        try {
+          const modelsData = results[1].value;
+          const modelsWithUrls = await Promise.all(
+            modelsData.map(async (model) => {
+              const modelUrl = await IonResource.fromAssetId(model.assetId);
+              return { ...model, url: modelUrl };
+            })
+          );
+          setModels(modelsWithUrls);
+        } catch (err) {
+          console.error("Model processing error:", err);
+          setError(prev => (prev ? prev + " | Models failed" : "Models failed"));
+        }
+      } else {
+        console.error(results[1].reason);
+        setError(prev => (prev ? prev + " | Models failed" : "Models failed"));
+      }
+
+      // Markers
+      if (results[2].status === "fulfilled") {
+        setMarkers(results[2].value);
+      } else {
+        console.warn(results[2].reason);
+        // Markers are non-critical, so we skip setting global error
+      }
+
+      // Views
+      if (results[3].status === "fulfilled") {
+        setViews(results[3].value);
+      } else {
+        console.warn(results[3].reason);
+        // No views → no crash, but can't use fly-to buttons
+      }
+
+    } catch (err) {
+      console.error("Unexpected load error:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  loadResources();
+}, []);
 
   const loadGeoJsonFromIon = async (viewer) => {
    
@@ -142,33 +161,46 @@ setViews(loadedViews);
 });
 setClipping(clippingPolygons);
   } catch (err) {
+     setError(err.message);
     console.error("Failed to load or process GeoJSON:", err);
   }
 };
    
  
-  const handleTilesetReady =  () => {
-  
-    const viewer = viewerRef.current?.cesiumElement;
-    if (!viewer) return;
+const handleTilesetReady = () => {
+  const viewer = viewerRef.current?.cesiumElement;
+  if (!viewer) return;
 
-    // Configure camera controls
-         viewer.scene.globe.show = false;
-          viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
-          viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
-          viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-         viewer.resolutionScale = 0.75;
-    
-    // Set initial view
-  const firstView = Object.values(views)[0];
-  if (firstView) {
-    viewer.camera.setView({
-      destination: Cartesian3.fromDegrees(...firstView.destination),
-      orientation: firstView.orientation,
-    });
+  try {
+    // Configure scene
+    viewer.scene.globe.show = false;
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
+    viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
+    viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    viewer.resolutionScale = 0.75;
+
+    // If we have at least one view, set it as the initial view
+    if (views && Object.keys(views).length > 0) {
+      const firstView = Object.values(views)[0];
+      if (
+        firstView &&
+        Array.isArray(firstView.destination) &&
+        firstView.destination.length === 3
+      ) {
+        viewer.camera.setView({
+          destination: Cartesian3.fromDegrees(...firstView.destination),
+          orientation: firstView.orientation || {},
+        });
+      }
+    }
+  } catch (err) {
+    setError("Failed to configure tileset: " + err.message);
+    console.error("Tileset configuration error:", err);
   }
-loadGeoJsonFromIon(viewer);
+
+  loadGeoJsonFromIon(viewer);
 };
+
 
 const handleFlyTo = (view) => {
   const viewer = viewerRef.current?.cesiumElement;
@@ -221,7 +253,7 @@ const handleFlyTo = (view) => {
     <div className="relative w-full h-screen">
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
 
-           
+        
         {tilesetUrl && (
           <Cesium3DTileset
             url={tilesetUrl}
@@ -262,7 +294,6 @@ const handleFlyTo = (view) => {
               image: "/marker.svg",
               verticalOrigin: VerticalOrigin.BOTTOM,
               scale: 1,
-            
             }}
             onClick={() => setSelectedMarker(marker)}
           />
@@ -271,8 +302,6 @@ const handleFlyTo = (view) => {
 
     {/* Navigation Controls */}
 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
-
-
   {Object.entries(views).map(([name, view]) => (
     <FlyToButton
       key={name}
