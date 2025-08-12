@@ -275,13 +275,13 @@ const handleFlyTo = (view) => {
     url={url}
     maximumScreenSpaceError={maximumScreenSpaceError}
     maximumMemoryUsage={512}
-    preloadWhenHidden={false}
-    skipScreenSpaceErrorFactor={128}
+   // preloadWhenHidden={false}
+    //skipScreenSpaceErrorFactor={128}
     shadows={ShadowMode.ENABLED}
   />
 ))}
 
-        {markers.map((marker) => (
+        {markers && markers.map((marker) => (
           <Entity
             key={marker.id}
             name={marker.name}
