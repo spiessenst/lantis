@@ -19,7 +19,12 @@ import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
 import QRScanner from "./QRScanner";
 
-const ION_TOKEN = import.meta?.env?.VITE_CESIUM_ION_TOKEN ?? "REPLACE_WITH_YOUR_ION_TOKEN";
+
+// Use env token if present; but only set it when we actually load Cesium
+//const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
+const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs"
+Ion.defaultAccessToken = ION_TOKEN;
+
 const VIEWER_OPTIONS = {
   timeline: false,
   animation: false,
