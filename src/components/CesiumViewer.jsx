@@ -17,7 +17,7 @@ import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
-import QRScanner from "./Qrscanner";
+import QRScanner from "./QRScanner";
 
 // Use env token if present; set it here like you had
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
