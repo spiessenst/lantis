@@ -114,11 +114,11 @@ export default function CesiumViewer() {
       {!scanOpen && !selectedPano && (
         <button
           onClick={() => setScanOpen(true)}
-          className="fixed bottom-5 right-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
+          className="fixed top-5 left-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
           aria-label="Scan QR"
           type="button"
         >
-          📷
+          📷 Scan QR
         </button>
       )}
 
