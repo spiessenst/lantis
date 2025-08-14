@@ -15,6 +15,7 @@
     "@photo-sphere-viewer/gyroscope-plugin": "^5.13.4",
     "@tailwindcss/vite": "^4.1.11",
     "@turf/turf": "^7.2.0",
+    "@zxing/browser": "^0.1.5",
     "cesium": "^1.131.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

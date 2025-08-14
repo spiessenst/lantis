@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Viewer as PhotoSphereViewer } from "@photo-sphere-viewer/core";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Viewer as PSVViewer } from "@photo-sphere-viewer/core";
 import "@photo-sphere-viewer/core/index.css";
 
 export default function PanoramaViewer({ image, onClose }) {
@@ -8,58 +8,65 @@ export default function PanoramaViewer({ image, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // optional: call this when you want to align to a compass heading (degrees from North)
+  const alignToHeading = useCallback((headingDeg, northOffsetDeg = 0) => {
+    const viewer = viewerRef.current;
+    if (!viewer || typeof headingDeg !== "number") return;
+    const yawDeg = northOffsetDeg - headingDeg; // adjust if pano’s 0° isn’t true north
+    // PSV v5+: use animate with degrees string
+    viewer.animate({ yaw: `${yawDeg}deg`, pitch: 0, speed: "1rpm" });
+  }, []);
+
   useEffect(() => {
     if (!image || !containerRef.current) return;
 
-    const loadImageAndInitialize = async () => {
+    let destroyed = false;
+
+    const init = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Preload the image first
         await new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = resolve;
-          img.onerror = () => reject(new Error('Failed to load panorama image'));
+          img.onerror = () => reject(new Error("Failed to load panorama image"));
           img.src = image;
         });
 
-        // Initialize viewer
-        viewerRef.current = new PhotoSphereViewer({
+        const viewer = new PSVViewer({
           container: containerRef.current,
           panorama: image,
           defaultYaw: 0,
           navbar: false,
           loadingImg: false,
           touchmoveTwoFingers: true,
-          size: {
-            width: '100%',
-            height: '100%'
-          }
+          size: { width: "100%", height: "100%" },
         });
+        viewerRef.current = viewer;
 
-        // Listen for ready state using the correct event system
-        const handler = viewerRef.current.addEventListener('ready', () => {
-          setLoading(false);
-        });
+        const onReady = () => setLoading(false);
+        viewer.addEventListener("ready", onReady);
 
+        // cleanup just this effect's listeners/instances
         return () => {
-          viewerRef.current?.removeEventListener('ready', handler);
+          if (destroyed) return;
+          viewer.removeEventListener("ready", onReady);
+          viewer.destroy();
+          viewerRef.current = null;
         };
-
-      } catch (err) {
-        setError(err.message || 'Failed to load panorama');
+      } catch (e) {
+        setError(e?.message || "Failed to load panorama");
         setLoading(false);
       }
     };
 
-    loadImageAndInitialize();
+    const cleanupPromise = init();
 
     return () => {
-      if (viewerRef.current) {
-        viewerRef.current.destroy();
-        viewerRef.current = null;
-      }
+      destroyed = true;
+      // cleanupPromise returns a function once init finishes
+      Promise.resolve(cleanupPromise).then((cleanup) => cleanup && cleanup());
     };
   }, [image]);
 
@@ -75,23 +82,20 @@ export default function PanoramaViewer({ image, onClose }) {
       </button>
 
       {loading && (
-       <div className="w-full h-screen flex items-center justify-center bg-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-blue-600">Panorama Laden...</p>
+        <div className="w-full h-screen flex items-center justify-center bg-blue-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-blue-600">Panorama Laden...</p>
+          </div>
         </div>
-      </div>
       )}
 
       {error && (
         <div className="w-full h-full flex flex-col items-center justify-center bg-black/50 text-white p-4">
           <p className="text-red-400 text-lg mb-2">Error loading panorama</p>
           <p className="text-sm mb-4">{error}</p>
-          <button
-            onClick={onClose}
-            className="bg-white/90 hover:bg-white text-black px-4 py-2 rounded"
-          >
-           Terug
+          <button onClick={onClose} className="bg-white/90 hover:bg-white text-black px-4 py-2 rounded">
+            Terug
           </button>
         </div>
       )}
@@ -99,7 +103,7 @@ export default function PanoramaViewer({ image, onClose }) {
       <div
         ref={containerRef}
         className={`flex-1 w-full h-full ${loading || error ? "invisible" : "visible"}`}
-        style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.3s ease' }}
+        style={{ opacity: loading ? 0 : 1, transition: "opacity 0.3s ease" }}
       />
     </div>
   );

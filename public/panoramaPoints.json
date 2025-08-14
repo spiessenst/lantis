@@ -1,22 +1,12 @@
 [
   {
-    "id": "p1",
-    "name": "Urban Development 360 - North View",
-    "longitude": 4.3660, 
-    "latitude": 51.23432, 
-    "height": 50,
-    "imageUrl": "/panoramas/panotest.jpg",
-    "initialYaw": 0
+       "id": "central-plaza",
+       "name": "Central Plaza",
+       "latitude": 51.23407,
+       "longitude": 4.3663,
+       "height": 50,
+       "imageUrl": "/panoramas/panotest.jpg",
+       "northOffsetDeg": 50
 
-  },
-  {
-    "id": "p2",
-    "name": "Urban Development 360 - South View",
-    "longitude": 4.3663, 
-    "latitude": 51.23407, 
-    "height": 50,
-    "imageUrl": "/panoramas/panotest.jpg", 
-    "initialYaw": 180
-  
   }
 ]
