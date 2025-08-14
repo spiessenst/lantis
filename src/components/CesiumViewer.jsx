@@ -433,7 +433,7 @@ export default function CesiumViewer() {
       )}
 
       {/* Mobile-only QR button; hidden when pano/scanner open */}
-      {!scanOpen && !selectedPano && (
+      {isMobile && !scanOpen && !selectedPano && (
         <button
           onClick={() => setScanOpen(true)}
           className="fixed bottom-5 right-5 z-[10050] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden"
