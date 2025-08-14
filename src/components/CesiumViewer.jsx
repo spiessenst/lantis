@@ -71,6 +71,28 @@ export default function CesiumViewer() {
   const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
 
+
+
+  
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer:coarse)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
+  return isMobile;
+}
+
+const isMobile = useIsMobile();
+
+
+
+
+  
+
   // --- PANORAMA-ONLY FLOW ---
   useEffect(() => {
     if (!panoOnly) return;
@@ -97,6 +119,8 @@ export default function CesiumViewer() {
     loadPanoOnly();
     return () => { abort = true; };
   }, [panoOnly, deepLinkId]);
+
+  
 
   const closePanoOnly = useCallback(() => {
     // Remove query param and stay lightweight (no Cesium)
@@ -404,12 +428,13 @@ useEffect(() => {
       )}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
-         <button
+        
+        {isMobile && !scanOpen && !selectedPano && ( <button
         className="absolute top-4 left-4 bg-white/90 text-black px-3 py-2 rounded-full shadow z-50"
         onClick={() => setScanOpen(true)}
       >
         📷 Scan QR
-      </button>
+      </button>)}
 
       {scanOpen && (
         <QRScanner
