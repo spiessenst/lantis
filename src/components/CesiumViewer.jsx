@@ -403,6 +403,19 @@ useEffect(() => {
       )}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+         <button
+        className="absolute top-4 left-4 bg-white/90 text-black px-3 py-2 rounded-full shadow z-50"
+        onClick={() => setScanOpen(true)}
+      >
+        📷 Scan QR
+      </button>
+
+      {scanOpen && (
+        <QRScanner
+          onDetected={(value) => handleScanResult(value)}
+          onClose={() => setScanOpen(false)}
+        />
+      )}
     </div>
   );
 }
