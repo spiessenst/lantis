@@ -23,8 +23,6 @@ import QRScanner from "./QRScanner";
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
 Ion.defaultAccessToken = ION_TOKEN;
 
-
-
 const VIEWER_OPTIONS = {
   timeline: false,
   animation: false,
@@ -49,11 +47,11 @@ function useIsMobile() {
     const mq = window.matchMedia("(pointer:coarse), (max-width: 768px)");
     const update = () => setIsMobile(mq.matches);
     update();
-    mq.addEventListener?.("change", update);
-    mq.addListener?.(update);
+    if (mq.addEventListener) mq.addEventListener("change", update);
+    else if (mq.addListener) mq.addListener(update);
     return () => {
-      mq.removeEventListener?.("change", update);
-      mq.removeListener?.(update);
+      if (mq.removeEventListener) mq.removeEventListener("change", update);
+      else if (mq.removeListener) mq.removeListener(update);
     };
   }, []);
   return isMobile;
@@ -85,6 +83,23 @@ export default function CesiumViewer() {
   const [error, setError] = useState(null);
   const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
+
+  // Ensure Cesium canvas resizes to true viewport height on device rotation/resize
+  useEffect(() => {
+    const onResize = () => {
+      const v = viewerRef.current?.cesiumElement;
+      try {
+        v?.resize?.();
+        v?.scene?.requestRender?.();
+      } catch {}
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, []);
 
   // --- QR Scan result handler ---
   const handleScanResult = useCallback((result) => {
@@ -161,7 +176,7 @@ export default function CesiumViewer() {
     const url = new URL(window.location.href);
     url.searchParams.delete("pano");
     url.searchParams.delete("id");
-    window.history.replaceState({}, "", url.pathname + (url.search ? "?" + url.searchParams.toString() : ""));
+    window.history.replaceState({}, "", url.toString());
     setSelectedPano(null);
     setSelectedPanoMeta(null);
     if (isMobile) setScanOpen(true); // return to scanner on mobile
@@ -170,7 +185,10 @@ export default function CesiumViewer() {
   if (panoOnly) {
     // Full-screen container so we can layer the FAB/Scanner over loaders too
     return (
-      <div className="relative w-full h-screen">
+      <div
+        className="relative w-full"
+        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {error && (
           <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-600">
             <div className="text-center p-4 max-w-md">
@@ -205,7 +223,6 @@ export default function CesiumViewer() {
 
   // --- FULL CESIUM FLOW ---
   useEffect(() => {
-    // already set above, but safe to keep if you later move the token out
     Ion.defaultAccessToken = ION_TOKEN;
   }, []);
 
@@ -372,7 +389,10 @@ export default function CesiumViewer() {
   // ERROR: still show QR UI
   if (error) {
     return (
-      <div className="relative w-full h-screen">
+      <div
+        className="relative w-full"
+        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600">
           <div className="text-center p-4 max-w-md">
             <h2 className="text-xl font-bold mb-2">Error Loading Map</h2>
@@ -393,7 +413,10 @@ export default function CesiumViewer() {
   // LOADING: still show QR UI
   if (isLoading) {
     return (
-      <div className="relative w-full h-screen">
+      <div
+        className="relative w-full"
+        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="absolute inset-0 flex items-center justify-center bg-blue-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
@@ -407,7 +430,10 @@ export default function CesiumViewer() {
 
   // READY
   return (
-    <div className="relative w-full h-screen">
+    <div
+      className="relative w-full"
+      style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
         {tilesetUrl && (
           <Cesium3DTileset
@@ -463,19 +489,38 @@ export default function CesiumViewer() {
         />
       )}
 
-      {/* nav controls (hidden when pano/scanner open) */}
-      {!selectedPano && !scanOpen && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
-          {Object.entries(views).map(([name, view]) => (
-            <FlyToButton
-              key={name}
-              label={name.charAt(0).toUpperCase() + name.slice(1)}
-              onClick={() => handleFlyTo(view)}
-            />
-          ))}
-          <CameraLogger viewerRef={viewerRef} label="Log View" />
-        </div>
-      )}
+    {/* nav controls (hidden when pano/scanner open) */}
+{!selectedPano && !scanOpen && (
+  <div
+    className="absolute inset-x-0 z-50"
+    style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+  >
+    <div
+      className="
+        mx-auto max-w-full
+        flex gap-2 justify-center
+        flex-wrap
+        overflow-x-auto
+        px-2
+      "
+      // No background, no shadow, no rounded corners
+    >
+      {Object.entries(views).map(([name, view]) => (
+        <FlyToButton
+          key={name}
+          label={name.charAt(0).toUpperCase() + name.slice(1)}
+          onClick={() => handleFlyTo(view)}
+          className="flex-shrink-0"
+        />
+      ))}
+      <CameraLogger
+        viewerRef={viewerRef}
+        label="Log View"
+        className="flex-shrink-0"
+      />
+    </div>
+  </div>
+)}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
 
