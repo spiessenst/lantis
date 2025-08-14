@@ -17,12 +17,10 @@ import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
-import QRScanner from "./QRScanner";
+import QRScanner from "./Qrscanner";
 
-
-// Use env token if present; but only set it when we actually load Cesium
-//const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
-const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs"
+// Use env token if present; set it here like you had
+const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
 Ion.defaultAccessToken = ION_TOKEN;
 
 const VIEWER_OPTIONS = {
@@ -68,12 +66,12 @@ export default function CesiumViewer() {
     const sp = new URLSearchParams(window.location.search);
     return sp.get("pano") ?? sp.get("id") ?? null;
   }, []);
-  const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
+  const [panoOnly] = useState(Boolean(deepLinkId));
   const [panoOnlyLoading, setPanoOnlyLoading] = useState(Boolean(deepLinkId));
 
-  const [selectedPano, setSelectedPano] = useState(null);      // image url
+  const [selectedPano, setSelectedPano] = useState(null);       // image url
   const [selectedPanoMeta, setSelectedPanoMeta] = useState(null); // lat/lng, northOffsetDeg
-  const [scanOpen, setScanOpen] = useState(false);              // mobile scanner
+  const [scanOpen, setScanOpen] = useState(false);               // mobile scanner
 
   // Cesium state (only when !panoOnly)
   const [tilesetUrl, setTilesetUrl] = useState(null);
@@ -106,6 +104,30 @@ export default function CesiumViewer() {
     url2.searchParams.set("pano", value);
     window.location.assign(url2.toString());
   }, []);
+
+  // Helper to render the mobile QR FAB + overlay consistently in every state
+  const renderQRUI = useCallback(() => (
+    <>
+      {/* Mobile-only QR button; hidden when pano/scanner open */}
+      {!scanOpen && !selectedPano && (
+        <button
+          onClick={() => setScanOpen(true)}
+          className="fixed bottom-5 right-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
+          aria-label="Scan QR"
+          type="button"
+        >
+          📷
+        </button>
+      )}
+
+      {scanOpen && (
+        <QRScanner
+          onDetected={(v) => { setScanOpen(false); handleScanResult(v); }}
+          onClose={() => setScanOpen(false)}
+        />
+      )}
+    </>
+  ), [scanOpen, selectedPano, handleScanResult]);
 
   // --- PANO-ONLY FLOW (deep link) ---
   useEffect(() => {
@@ -144,46 +166,44 @@ export default function CesiumViewer() {
   }, [isMobile]);
 
   if (panoOnly) {
-    if (scanOpen) {
-      return (
-        <QRScanner
-          onDetected={(v) => { setScanOpen(false); handleScanResult(v); }}
-          onClose={() => setScanOpen(false)}
-        />
-      );
-    }
-    if (error) {
-      return (
-        <div className="w-full h-screen flex items-center justify-center bg-red-50 text-red-600">
-          <div className="text-center p-4 max-w-md">
-            <h2 className="text-xl font-bold mb-2">Error</h2>
-            <p>{error}</p>
-          </div>
-        </div>
-      );
-    }
-    if (panoOnlyLoading || !selectedPano) {
-      return (
-        <div className="w-full h-screen flex items-center justify-center bg-blue-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-blue-600">Panorama Laden...</p>
-          </div>
-        </div>
-      );
-    }
+    // Full-screen container so we can layer the FAB/Scanner over loaders too
     return (
-      <PanoramaViewer
-        image={selectedPano}
-        onClose={closePanoOnly}
-        initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
-        gyroscopeAbsolute={false}
-      />
+      <div className="relative w-full h-screen">
+        {error && (
+          <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-600">
+            <div className="text-center p-4 max-w-md">
+              <h2 className="text-xl font-bold mb-2">Error</h2>
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {!error && (panoOnlyLoading || !selectedPano) && (
+          <div className="w-full h-full flex items-center justify-center bg-blue-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-blue-600">Panorama Laden...</p>
+            </div>
+          </div>
+        )}
+
+        {!error && selectedPano && (
+          <PanoramaViewer
+            image={selectedPano}
+            onClose={closePanoOnly}
+            initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
+            gyroscopeAbsolute={false}
+          />
+        )}
+
+        {renderQRUI()}
+      </div>
     );
   }
 
   // --- FULL CESIUM FLOW ---
   useEffect(() => {
+    // already set above, but safe to keep if you later move the token out
     Ion.defaultAccessToken = ION_TOKEN;
   }, []);
 
@@ -347,34 +367,43 @@ export default function CesiumViewer() {
     if (isMobile) setScanOpen(true); // back to scanner on mobile
   }, [isMobile]);
 
+  // ERROR: still show QR UI
   if (error) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-red-50 text-red-600">
-        <div className="text-center p-4 max-w-md">
-          <h2 className="text-xl font-bold mb-2">Error Loading Map</h2>
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-100 rounded hover:bg-red-200"
-          >
-            Try Again
-          </button>
+      <div className="relative w-full h-screen">
+        <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600">
+          <div className="text-center p-4 max-w-md">
+            <h2 className="text-xl font-bold mb-2">Error Loading Map</h2>
+            <p>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-red-100 rounded hover:bg-red-200"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
+        {renderQRUI()}
       </div>
     );
   }
 
+  // LOADING: still show QR UI
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-blue-600">Laden 3D Map...</p>
+      <div className="relative w-full h-screen">
+        <div className="absolute inset-0 flex items-center justify-center bg-blue-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-blue-600">Laden 3D Map...</p>
+          </div>
         </div>
+        {renderQRUI()}
       </div>
     );
   }
 
+  // READY
   return (
     <div className="relative w-full h-screen">
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
@@ -432,35 +461,23 @@ export default function CesiumViewer() {
         />
       )}
 
-      {/* Mobile-only QR button; hidden when pano/scanner open */}
-      {isMobile && !scanOpen && !selectedPano && (
-        <button
-          onClick={() => setScanOpen(true)}
-          className="fixed bottom-5 right-5 z-[10050] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden"
-          aria-label="Scan QR"
-          type="button"
-        >
-          📷
-        </button>
-      )}
-
-      {scanOpen && (
-        <QRScanner
-          onDetected={(v) => { setScanOpen(false); handleScanResult(v); }}
-          onClose={() => setScanOpen(false)}
-        />
-      )}
-
+      {/* nav controls (hidden when pano/scanner open) */}
       {!selectedPano && !scanOpen && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
           {Object.entries(views).map(([name, view]) => (
-            <FlyToButton key={name} label={name.charAt(0).toUpperCase() + name.slice(1)} onClick={() => handleFlyTo(view)} />
+            <FlyToButton
+              key={name}
+              label={name.charAt(0).toUpperCase() + name.slice(1)}
+              onClick={() => handleFlyTo(view)}
+            />
           ))}
           <CameraLogger viewerRef={viewerRef} label="Log View" />
         </div>
       )}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+
+      {renderQRUI()}
     </div>
   );
 }
