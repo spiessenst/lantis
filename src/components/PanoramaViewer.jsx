@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Viewer as PSVViewer } from "@photo-sphere-viewer/core";
 import "@photo-sphere-viewer/core/index.css";
 import { GyroscopePlugin } from "@photo-sphere-viewer/gyroscope-plugin";
-import "@photo-sphere-viewer/gyroscope-plugin/index.css";
+
 
 /**
  * Props:

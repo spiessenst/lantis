@@ -73,7 +73,7 @@ export default function CesiumViewer() {
 
 
 
-  
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -430,7 +430,8 @@ useEffect(() => {
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
         
         {isMobile && !scanOpen && !selectedPano && ( <button
-        className="absolute top-4 left-4 bg-white/90 text-black px-3 py-2 rounded-full shadow z-50"
+        className="absolute top-4 left-4 px-6 py-2 rounded-full bg-[#009391] text-white font-medium shadow-md hover:bg-[#007f7c] transition duration-200"
+        
         onClick={() => setScanOpen(true)}
       >
         📷 Scan QR
