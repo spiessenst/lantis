@@ -1,16 +1,14 @@
-// src/components/PanoramaViewer.jsx
 import { useEffect, useRef, useState } from "react";
 import { Viewer as PSVViewer } from "@photo-sphere-viewer/core";
 import "@photo-sphere-viewer/core/index.css";
 import { GyroscopePlugin } from "@photo-sphere-viewer/gyroscope-plugin";
 
-
 /**
  * Props:
  *  - image (string, required): URL to the equirectangular panorama
  *  - onClose (fn): close handler
- *  - initialYawDeg (number, optional): override URL yaw
- *  - gyroscopeAbsolute (bool, optional): if true, gyro is absolute to world; default=false (relative to initial yaw)
+ *  - initialYawDeg (number, optional): if provided, open instantly at this yaw
+ *  - gyroscopeAbsolute (bool, optional): true -> absolute to world, false -> relative; default=false
  */
 export default function PanoramaViewer({
   image,
@@ -26,7 +24,7 @@ export default function PanoramaViewer({
   const [error, setError] = useState(null);
   const [needsMotionPerm, setNeedsMotionPerm] = useState(false);
 
-  // read yaw from URL (?yaw=, ?heading=, or ?bearing=)
+  // Fallback: yaw from URL (?yaw= / ?heading= / ?bearing=) if prop not given
   const getUrlYaw = () => {
     const sp = new URLSearchParams(window.location.search);
     const raw = sp.get("yaw") ?? sp.get("heading") ?? sp.get("bearing");
@@ -34,7 +32,7 @@ export default function PanoramaViewer({
     return Number.isFinite(n) ? n : 0;
   };
 
-  // set yaw instantly (no animation)
+  // Set yaw instantly (no animation)
   const setYawInstant = (deg) => {
     const v = viewerRef.current;
     if (!v || typeof deg !== "number") return;
@@ -55,7 +53,7 @@ export default function PanoramaViewer({
       setError(null);
 
       try {
-        // preload
+        // preload image
         await new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = resolve;
@@ -68,8 +66,7 @@ export default function PanoramaViewer({
         const viewer = new PSVViewer({
           container: containerRef.current,
           panorama: image,
-          // open directly at requested yaw (no animation)
-          defaultYaw: `${yawDeg}deg`,
+          defaultYaw: `${yawDeg}deg`, // open instantly at the correct angle
           navbar: false,
           loadingImg: false,
           touchmoveTwoFingers: true,
@@ -83,14 +80,14 @@ export default function PanoramaViewer({
         const onReady = async () => {
           if (destroyed) return;
           setLoading(false);
-          // force once more to ensure initial angle
+          // force once more to ensure initial angle sticks on all builds
           setYawInstant(yawDeg);
 
-          // try to start gyroscope (iOS may need a user gesture/permission)
           const gyro = viewer.getPlugin(GyroscopePlugin);
           gyroRef.current = gyro;
+
           try {
-            await gyro.start(); // will throw if permission required
+            await gyro.start(); // may throw if iOS permission required
           } catch {
             setNeedsMotionPerm(true);
           }
@@ -130,7 +127,7 @@ export default function PanoramaViewer({
       await gyroRef.current?.start?.();
       setNeedsMotionPerm(false);
     } catch {
-      // keep the button visible if it still fails
+      // keep button visible if still blocked
     }
   };
 

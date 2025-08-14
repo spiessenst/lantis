@@ -31,7 +31,7 @@ export default function QRScanner({ onDetected, onClose }) {
           audio: false,
         });
         if (stopped) {
-          stream.getTracks().forEach(t => t.stop());
+          stream.getTracks().forEach((t) => t.stop());
           return;
         }
         streamRef.current = stream;
@@ -55,12 +55,10 @@ export default function QRScanner({ onDetected, onClose }) {
                 const value = codes[0].rawValue || codes[0].displayValue;
                 if (value) {
                   onDetected?.(value);
-                  return; // do not schedule next frame
+                  return; // stop loop
                 }
               }
-            } catch (e) {
-              // ignore transient errors
-            }
+            } catch {}
             rafId = requestAnimationFrame(scan);
           };
           rafId = requestAnimationFrame(scan);
@@ -84,7 +82,6 @@ export default function QRScanner({ onDetected, onClose }) {
             if (!(e instanceof NotFoundException)) {
               console.warn("ZXing decode error", e);
             }
-            // continue trying
             requestAnimationFrame(loop);
           }
         };
