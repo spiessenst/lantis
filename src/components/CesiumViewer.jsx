@@ -19,13 +19,7 @@ import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
 import QRScanner from "./QRScanner";
 
-
-// Use env token if present; but only set it when we actually load Cesium
-//const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
-const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs"
-Ion.defaultAccessToken = ION_TOKEN;
-
-
+const ION_TOKEN = import.meta?.env?.VITE_CESIUM_ION_TOKEN ?? "REPLACE_WITH_YOUR_ION_TOKEN";
 const VIEWER_OPTIONS = {
   timeline: false,
   animation: false,
@@ -41,10 +35,9 @@ const VIEWER_OPTIONS = {
   requestRenderMode: true,
   maximumRenderTimeChange: 0.0,
 };
-
 const TILESET_ASSET_ID = 2275207;
 
-// simple mobile detector for behavior (not CSS)
+// Simple device check for behavior (not styling)
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -65,7 +58,7 @@ export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const isMobile = useIsMobile();
 
-  // --- Deep-link detection: pano-only mode ---
+  // --- Deep link: pano-only mode ---
   const deepLinkId = useMemo(() => {
     const sp = new URLSearchParams(window.location.search);
     return sp.get("pano") ?? sp.get("id") ?? null;
@@ -73,13 +66,11 @@ export default function CesiumViewer() {
   const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
   const [panoOnlyLoading, setPanoOnlyLoading] = useState(Boolean(deepLinkId));
 
-  const [selectedPano, setSelectedPano] = useState(null); // image url
+  const [selectedPano, setSelectedPano] = useState(null);      // image url
   const [selectedPanoMeta, setSelectedPanoMeta] = useState(null); // lat/lng, northOffsetDeg
+  const [scanOpen, setScanOpen] = useState(false);              // mobile scanner
 
-  // QR scanner
-  const [scanOpen, setScanOpen] = useState(false);
-
-  // --- Cesium (only used when not panoOnly) ---
+  // Cesium state (only when !panoOnly)
   const [tilesetUrl, setTilesetUrl] = useState(null);
   const [models, setModels] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -90,7 +81,7 @@ export default function CesiumViewer() {
   const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
 
-  // ---------- QR handling ----------
+  // --- QR Scan result handler ---
   const handleScanResult = useCallback((result) => {
     const raw = typeof result === "string" ? result : (result?.data ?? result?.text ?? "");
     const value = String(raw).trim();
@@ -103,7 +94,7 @@ export default function CesiumViewer() {
         return;
       }
     } catch {
-      // not a URL; treat as pano id
+      // not a URL
     }
 
     const url2 = new URL(window.location.href);
@@ -111,7 +102,7 @@ export default function CesiumViewer() {
     window.location.assign(url2.toString());
   }, []);
 
-  // ---------- PANO-ONLY FLOW ----------
+  // --- PANO-ONLY FLOW (deep link) ---
   useEffect(() => {
     if (!panoOnly) return;
 
@@ -126,7 +117,7 @@ export default function CesiumViewer() {
         if (!found) throw new Error("Panorama not found: " + deepLinkId);
         if (aborted) return;
         setSelectedPano(found.imageUrl);
-        setSelectedPanoMeta(found);
+        setSelectedPanoMeta(found); // includes northOffsetDeg
       } catch (e) {
         if (!aborted) setError(e.message);
       } finally {
@@ -137,14 +128,14 @@ export default function CesiumViewer() {
   }, [panoOnly, deepLinkId]);
 
   const closePanoOnly = useCallback(() => {
-    // Remove query params, keep pano-only lightweight
+    // strip query, stay lightweight (no Cesium)
     const url = new URL(window.location.href);
     url.searchParams.delete("pano");
     url.searchParams.delete("id");
     window.history.replaceState({}, "", url.pathname + (url.search ? "?" + url.searchParams.toString() : ""));
     setSelectedPano(null);
     setSelectedPanoMeta(null);
-    if (isMobile) setScanOpen(true); // <-- back to scanner on mobile
+    if (isMobile) setScanOpen(true); // return to scanner on mobile
   }, [isMobile]);
 
   if (panoOnly) {
@@ -156,7 +147,6 @@ export default function CesiumViewer() {
         />
       );
     }
-
     if (error) {
       return (
         <div className="w-full h-screen flex items-center justify-center bg-red-50 text-red-600">
@@ -167,7 +157,6 @@ export default function CesiumViewer() {
         </div>
       );
     }
-
     if (panoOnlyLoading || !selectedPano) {
       return (
         <div className="w-full h-screen flex items-center justify-center bg-blue-50">
@@ -178,7 +167,6 @@ export default function CesiumViewer() {
         </div>
       );
     }
-
     return (
       <PanoramaViewer
         image={selectedPano}
@@ -189,9 +177,9 @@ export default function CesiumViewer() {
     );
   }
 
-  // ---------- FULL CESIUM FLOW ----------
+  // --- FULL CESIUM FLOW ---
   useEffect(() => {
-    Ion.defaultAccessToken = ION_TOKEN; // set only when we actually use Cesium
+    Ion.defaultAccessToken = ION_TOKEN;
   }, []);
 
   useEffect(() => {
@@ -221,7 +209,7 @@ export default function CesiumViewer() {
           ), // 4 panos (optional)
         ]);
 
-        // 0) Tileset (critical)
+        // Tileset (critical)
         if (results[0].status === "fulfilled") {
           if (!ignore) setTilesetUrl(results[0].value);
         } else if (!isAbort(results[0].reason)) {
@@ -229,7 +217,7 @@ export default function CesiumViewer() {
           if (!ignore) setError((e) => (e ? e + " | Tileset failed" : "Tileset failed"));
         }
 
-        // 1) MODELS OPTIONAL
+        // Models (optional)
         if (results[1].status === "fulfilled") {
           try {
             const modelsData = Array.isArray(results[1].value) ? results[1].value : [];
@@ -254,21 +242,21 @@ export default function CesiumViewer() {
           console.warn(results[1].reason || "Models fetch failed (non-critical)");
         }
 
-        // 2) Markers
+        // Markers (optional)
         if (results[2].status === "fulfilled") {
           if (!ignore) setMarkers(results[2].value);
         } else if (!isAbort(results[2].reason)) {
           console.warn(results[2].reason || "Markers failed (non-critical)");
         }
 
-        // 3) Views
+        // Views (optional)
         if (results[3].status === "fulfilled") {
           if (!ignore) setViews(results[3].value);
         } else if (!isAbort(results[3].reason)) {
           console.warn(results[3].reason || "Views failed (non-critical)");
         }
 
-        // 4) Panoramas
+        // Panoramas (optional)
         if (results[4].status === "fulfilled") {
           if (!ignore) setPanoramaPoints(results[4].value);
         } else if (!isAbort(results[4].reason)) {
@@ -351,7 +339,7 @@ export default function CesiumViewer() {
   const handlePanoClose = useCallback(() => {
     setSelectedPano(null);
     setSelectedPanoMeta(null);
-    if (isMobile) setScanOpen(true); // <-- back to scanner on mobile
+    if (isMobile) setScanOpen(true); // back to scanner on mobile
   }, [isMobile]);
 
   if (error) {
@@ -424,7 +412,7 @@ export default function CesiumViewer() {
             billboard={{ image: "/blue_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
             onClick={() => {
               setSelectedPano(pano.imageUrl);
-              setSelectedPanoMeta(pano);
+              setSelectedPanoMeta(pano); // has northOffsetDeg
             }}
           />
         ))}
@@ -439,7 +427,7 @@ export default function CesiumViewer() {
         />
       )}
 
-      {/* Mobile-only FAB to open scanner; hidden when pano/scanner open */}
+      {/* Mobile-only QR button; hidden when pano/scanner open */}
       {!scanOpen && !selectedPano && (
         <button
           onClick={() => setScanOpen(true)}
@@ -458,15 +446,10 @@ export default function CesiumViewer() {
         />
       )}
 
-      {/* Navigation controls (hidden when pano/scanner open) */}
       {!selectedPano && !scanOpen && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-50">
           {Object.entries(views).map(([name, view]) => (
-            <FlyToButton
-              key={name}
-              label={name.charAt(0).toUpperCase() + name.slice(1)}
-              onClick={() => handleFlyTo(view)}
-            />
+            <FlyToButton key={name} label={name.charAt(0).toUpperCase() + name.slice(1)} onClick={() => handleFlyTo(view)} />
           ))}
           <CameraLogger viewerRef={viewerRef} label="Log View" />
         </div>

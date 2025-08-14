@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Mobile QR Scanner overlay component
- *
- * Props
- * - onDetected: (value: string) => void
- * - onClose: () => void
- *
- * Uses BarcodeDetector when available (Chrome, Android). Falls back to @zxing/browser if installed.
- * Torch toggle is attempted when supported.
+ * Mobile QR Scanner overlay
+ * Props: onDetected(value:string), onClose()
  */
 export default function QRScanner({ onDetected, onClose }) {
   const videoRef = useRef(null);
@@ -62,7 +56,6 @@ export default function QRScanner({ onDetected, onClose }) {
             rafId = requestAnimationFrame(scan);
           };
           rafId = requestAnimationFrame(scan);
-
           return () => cancelAnimationFrame(rafId);
         }
 
@@ -95,9 +88,7 @@ export default function QRScanner({ onDetected, onClose }) {
 
     return () => {
       stopped = true;
-      try {
-        zxingReaderRef.current?.reset();
-      } catch {}
+      try { zxingReaderRef.current?.reset(); } catch {}
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
@@ -109,7 +100,7 @@ export default function QRScanner({ onDetected, onClose }) {
       const track = trackRef.current;
       if (!track) return;
       const capabilities = track.getCapabilities?.();
-      if (!capabilities || !capabilities.torch) return; // not supported
+      if (!capabilities || !capabilities.torch) return;
       await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
       setTorchOn((v) => !v);
     } catch (e) {
@@ -120,25 +111,15 @@ export default function QRScanner({ onDetected, onClose }) {
   return (
     <div className="fixed inset-0 z-[10000] bg-black/90 text-white flex flex-col">
       <div className="absolute inset-0 pointer-events-none">
-        {/* framing */}
         <div className="absolute inset-0 grid place-items-center">
           <div className="w-64 h-64 rounded-xl border-2 border-white/80" />
         </div>
       </div>
 
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        playsInline
-        muted
-        autoPlay
-      />
+      <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
 
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
-        <button
-          onClick={onClose}
-          className="bg-white/90 text-black px-4 py-2 rounded-full shadow"
-        >
+        <button onClick={onClose} className="bg-white/90 text-black px-4 py-2 rounded-full shadow">
           Close
         </button>
         <div className="flex items-center gap-2">
@@ -150,9 +131,7 @@ export default function QRScanner({ onDetected, onClose }) {
           >
             🔦 Torch
           </button>
-          {usingZXing && (
-            <span className="text-xs bg-white/20 px-2 py-1 rounded">ZXing fallback</span>
-          )}
+          {usingZXing && <span className="text-xs bg-white/20 px-2 py-1 rounded">ZXing fallback</span>}
         </div>
       </div>
 

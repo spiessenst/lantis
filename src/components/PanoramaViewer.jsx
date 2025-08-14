@@ -7,8 +7,8 @@ import { GyroscopePlugin } from "@photo-sphere-viewer/gyroscope-plugin";
  * Props:
  *  - image (string, required): URL to the equirectangular panorama
  *  - onClose (fn): close handler
- *  - initialYawDeg (number, optional): if provided, open instantly at this yaw
- *  - gyroscopeAbsolute (bool, optional): true -> absolute to world, false -> relative; default=false
+ *  - initialYawDeg (number, optional): initial yaw in degrees (no animation)
+ *  - gyroscopeAbsolute (bool, optional): true -> absolute to world, false -> relative (default false)
  */
 export default function PanoramaViewer({
   image,
@@ -24,7 +24,7 @@ export default function PanoramaViewer({
   const [error, setError] = useState(null);
   const [needsMotionPerm, setNeedsMotionPerm] = useState(false);
 
-  // Fallback: yaw from URL (?yaw= / ?heading= / ?bearing=) if prop not given
+  // Fallback yaw from URL (?yaw= / ?heading= / ?bearing=) if prop not provided
   const getUrlYaw = () => {
     const sp = new URLSearchParams(window.location.search);
     const raw = sp.get("yaw") ?? sp.get("heading") ?? sp.get("bearing");
@@ -53,7 +53,7 @@ export default function PanoramaViewer({
       setError(null);
 
       try {
-        // preload image
+        // Preload the image
         await new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = resolve;
@@ -66,7 +66,7 @@ export default function PanoramaViewer({
         const viewer = new PSVViewer({
           container: containerRef.current,
           panorama: image,
-          defaultYaw: `${yawDeg}deg`, // open instantly at the correct angle
+          defaultYaw: `${yawDeg}deg`, // open instantly at yaw
           navbar: false,
           loadingImg: false,
           touchmoveTwoFingers: true,
@@ -80,14 +80,13 @@ export default function PanoramaViewer({
         const onReady = async () => {
           if (destroyed) return;
           setLoading(false);
-          // force once more to ensure initial angle sticks on all builds
+          // Ensure initial yaw is applied on all builds
           setYawInstant(yawDeg);
 
           const gyro = viewer.getPlugin(GyroscopePlugin);
           gyroRef.current = gyro;
-
           try {
-            await gyro.start(); // may throw if iOS permission required
+            await gyro.start(); // iOS may require a user gesture/permission
           } catch {
             setNeedsMotionPerm(true);
           }
