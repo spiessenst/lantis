@@ -20,6 +20,7 @@ import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
+import QRScanner from "./QRScanner";
 
 // Use env token if present; but only set it when we actually load Cesium
 //const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZjAzZTkxOS02ZjlkLTQ2MjctOWZiNi1kY2Y1NGZkNGRhNDQiLCJpZCI6MTEwMDQwLCJpYXQiOjE2NjQ4ODQxMjV9.6XX7lAjYrYVtE4EzIHaoDV3tDU4NNsHJTbuC5OzUnl4";
