@@ -57,8 +57,6 @@ function useIsMobile() {
   return isMobile;
 }
 
-
-
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const isMobile = useIsMobile();
@@ -76,7 +74,7 @@ export default function CesiumViewer() {
   const [selectedPanoMeta, setSelectedPanoMeta] = useState(null); // lat/lng, northOffsetDeg
   const [scanOpen, setScanOpen] = useState(false);               // mobile scanner
 
-  // Cesium state (only when !panoOnly)
+  // Cesium state (loaded regardless of panoOnly)
   const [tilesetUrl, setTilesetUrl] = useState(null);
   const [models, setModels] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -104,17 +102,17 @@ export default function CesiumViewer() {
     };
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     const v = viewerRef.current?.cesiumElement;
     if (!v) return;
-          const canvas = v.canvas;
+    const canvas = v.canvas;
     if (selectedPano) {
-       v.useDefaultRenderLoop = false; // hard pause
-    if (canvas) canvas.style.visibility = "hidden";
+      v.useDefaultRenderLoop = false; // hard pause
+      if (canvas) canvas.style.visibility = "hidden";
     } else {
       v.useDefaultRenderLoop = true;  // resume
-    if (canvas) canvas.style.visibility = "visible";
-     v.scene.requestRender();        // render once to refresh
+      if (canvas) canvas.style.visibility = "visible";
+      v.scene.requestRender();        // render once to refresh
     }
   }, [selectedPano]);
 
@@ -189,67 +187,19 @@ export default function CesiumViewer() {
   }, [panoOnly, deepLinkId]);
 
   const closePanoOnly = useCallback(() => {
-    // strip query, stay lightweight (no Cesium)
+    // strip query, and switch to full Cesium
     const url = new URL(window.location.href);
     url.searchParams.delete("pano");
     url.searchParams.delete("id");
     window.history.replaceState({}, "", url.toString());
     setSelectedPano(null);
     setSelectedPanoMeta(null);
-   setPanoOnlyLoading(false);
-    if (isMobile) setScanOpen(true); // return to scanner on mobile
-  }, [isMobile]);
+    setPanoOnly(false);          // leave pano-only, go to Cesium viewer
+    setPanoOnlyLoading(false);   // kill loading overlay if any
+    setScanOpen(false);          // don't auto-open scanner
+  }, []);
 
-  if (panoOnly) {
-    // Full-screen container so we can layer the FAB/Scanner over loaders too
-    return (
-      <div
-        className="relative w-full"
-        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        {error && (
-          <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-600">
-            <div className="text-center p-4 max-w-md">
-              <h2 className="text-xl font-bold mb-2">Error</h2>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
-
-       {/* Loading while we fetch the deep-linked pano */}+ {!error && panoOnlyLoading && (
-   <div className="w-full h-full flex items-center justify-center bg-blue-50">
-     <div className="text-center">
-       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-       <p className="mt-4 text-blue-600">Panorama Laden...</p>
-     </div>
-   </div>
- )}
-
- {/* Idle state: no pano selected — show a simple background; QR overlay will appear */}
- {!error && !panoOnlyLoading && !selectedPano && (
-   <div className="w-full h-full flex items-center justify-center bg-gray-50">
-     <div className="text-center text-gray-600">
-       <p className="mb-2">Scan een QR-code om een panorama te openen</p>
-       <p className="text-sm opacity-70">(of sluit deze en ga terug)</p>
-     </div>
-   </div>
-)}
-
-        {!error && selectedPano && (
-          <PanoramaViewer
-            image={selectedPano}
-            onClose={closePanoOnly}
-            initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
-            gyroscopeAbsolute={false}
-          />
-        )}
-
-        {renderQRUI()}
-      </div>
-    );
-  }
-
-  // --- FULL CESIUM FLOW ---
+  // --- ALWAYS load Cesium resources (even while in pano-only) ---
   useEffect(() => {
     Ion.defaultAccessToken = ION_TOKEN;
   }, []);
@@ -408,13 +358,12 @@ export default function CesiumViewer() {
     setSelectedMarker(null);
   }, []);
 
-
-
-
   const handlePanoClose = useCallback(() => {
-   setSelectedPano(null);
-   setSelectedPanoMeta(null);
- }, []);
+    setSelectedPano(null);
+    setSelectedPanoMeta(null);
+  }, []);
+
+  // --- RENDER ---
 
   // ERROR: still show QR UI
   if (error) {
@@ -440,7 +389,48 @@ export default function CesiumViewer() {
     );
   }
 
-  // LOADING: still show QR UI
+  // PANO-ONLY BRANCH
+  if (panoOnly) {
+    return (
+      <div
+        className="relative w-full"
+        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {error && (
+          <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-600">
+            <div className="text-center p-4 max-w-md">
+              <h2 className="text-xl font-bold mb-2">Error</h2>
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading while fetching a deep-linked pano */}
+        {!error && panoOnlyLoading && (
+          <div className="w-full h-full flex items-center justify-center bg-blue-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-blue-600">Panorama Laden...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Show pano when available */}
+        {!error && selectedPano && (
+          <PanoramaViewer
+            image={selectedPano}
+            onClose={closePanoOnly}
+            initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
+            gyroscopeAbsolute={false}
+          />
+        )}
+
+        {renderQRUI()}
+      </div>
+    );
+  }
+
+  // CESIUM FLOW (ready or loading)
   if (isLoading) {
     return (
       <div
@@ -458,7 +448,7 @@ export default function CesiumViewer() {
     );
   }
 
-  // READY
+  // READY: Cesium viewer
   return (
     <div
       className="relative w-full"
@@ -503,7 +493,7 @@ export default function CesiumViewer() {
             position={Cartesian3.fromDegrees(pano.longitude, pano.latitude, pano.height)}
             billboard={{ image: "/blue_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
             onClick={() => {
-                  setScanOpen(false); // ensure scanner is not showing
+              setScanOpen(false); // ensure scanner is not showing
               setSelectedPano(pano.imageUrl);
               setSelectedPanoMeta(pano); // has northOffsetDeg
             }}
@@ -520,38 +510,37 @@ export default function CesiumViewer() {
         />
       )}
 
-    {/* nav controls (hidden when pano/scanner open) */}
-{!selectedPano && !scanOpen && (
-  <div
-    className="absolute inset-x-0 z-50"
-    style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-  >
-    <div
-      className="
-        mx-auto max-w-full
-        flex gap-2 justify-center
-        flex-wrap
-        overflow-x-auto
-        px-2
-      "
-      // No background, no shadow, no rounded corners
-    >
-      {Object.entries(views).map(([name, view]) => (
-        <FlyToButton
-          key={name}
-          label={name.charAt(0).toUpperCase() + name.slice(1)}
-          onClick={() => handleFlyTo(view)}
-          className="flex-shrink-0"
-        />
-      ))}
-      <CameraLogger
-        viewerRef={viewerRef}
-        label="Log View"
-        className="flex-shrink-0"
-      />
-    </div>
-  </div>
-)}
+      {/* nav controls (hidden when pano/scanner open) */}
+      {!selectedPano && !scanOpen && (
+        <div
+          className="absolute inset-x-0 z-50"
+          style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <div
+            className="
+              mx-auto max-w-full
+              flex gap-2 justify-center
+              flex-wrap
+              overflow-x-auto
+              px-2
+            "
+          >
+            {Object.entries(views).map(([name, view]) => (
+              <FlyToButton
+                key={name}
+                label={name.charAt(0).toUpperCase() + name.slice(1)}
+                onClick={() => handleFlyTo(view)}
+                className="flex-shrink-0"
+              />
+            ))}
+            <CameraLogger
+              viewerRef={viewerRef}
+              label="Log View"
+              className="flex-shrink-0"
+            />
+          </div>
+        </div>
+      )}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
 
