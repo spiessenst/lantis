@@ -68,7 +68,7 @@ export default function CesiumViewer() {
     const sp = new URLSearchParams(window.location.search);
     return sp.get("pano") ?? sp.get("id") ?? null;
   }, []);
-  const [panoOnly] = useState(Boolean(deepLinkId));
+const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
   const [panoOnlyLoading, setPanoOnlyLoading] = useState(Boolean(deepLinkId));
 
   const [selectedPano, setSelectedPano] = useState(null);       // image url
@@ -106,12 +106,14 @@ export default function CesiumViewer() {
     useEffect(() => {
     const v = viewerRef.current?.cesiumElement;
     if (!v) return;
-
+          const canvas = v.canvas;
     if (selectedPano) {
-      v.useDefaultRenderLoop = false; // hard pause
+       v.useDefaultRenderLoop = false; // hard pause
+    if (canvas) canvas.style.visibility = "hidden";
     } else {
       v.useDefaultRenderLoop = true;  // resume
-      v.scene.requestRender();        // render once to refresh
+    if (canvas) canvas.style.visibility = "visible";
+     v.scene.requestRender();        // render once to refresh
     }
   }, [selectedPano]);
 
@@ -193,6 +195,8 @@ export default function CesiumViewer() {
     window.history.replaceState({}, "", url.toString());
     setSelectedPano(null);
     setSelectedPanoMeta(null);
+     setPanoOnly(false);          // leave pano-only branch
+   setPanoOnlyLoading(false);   // kill loading overlay if any
     if (isMobile) setScanOpen(true); // return to scanner on mobile
   }, [isMobile]);
 

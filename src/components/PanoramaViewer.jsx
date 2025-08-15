@@ -71,13 +71,7 @@ export default function PanoramaViewer({
           loadingImg: false,
           touchmoveTwoFingers: true,
           size: { width: "100%", height: "100%" },
-           rendererOptions: {
-    antialias: false,                 // big win
-    alpha: false,
-    powerPreference: "high-performance",
-    preserveDrawingBuffer: false,
-    failIfMajorPerformanceCaveat: true,
-  },
+         
           plugins: [
            // [GyroscopePlugin, { absolutePosition: gyroscopeAbsolute, moveMode: "smooth", roll: true }],
             [GyroscopePlugin, { absolutePosition: gyroscopeAbsolute, moveMode: "fast", roll: false }],
