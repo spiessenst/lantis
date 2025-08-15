@@ -8,5 +8,15 @@
        "imageUrl": "/panoramas/panotest.jpg",
        "northOffsetDeg": 90
 
+  },
+    {
+       "id": "mag",
+       "name": "mag thuis",
+       "latitude": 51.24,
+       "longitude": 4.4,
+       "height": 50,
+       "imageUrl": "/panoramas/mag.png",
+       "northOffsetDeg": 0
+
   }
 ]
