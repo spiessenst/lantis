@@ -19,7 +19,6 @@ import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
 import QRScanner from "./QRScanner";
 
-// Use env token if present; set it here like you had
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
 Ion.defaultAccessToken = ION_TOKEN;
 
@@ -40,7 +39,6 @@ const VIEWER_OPTIONS = {
 };
 const TILESET_ASSET_ID = 2275207;
 
-// Simple device check for behavior (not styling)
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -61,31 +59,34 @@ export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const isMobile = useIsMobile();
 
-  // --- Deep link: pano-only mode ---
+  // Deep link detection (only for the very first load)
   const deepLinkId = useMemo(() => {
     const sp = new URLSearchParams(window.location.search);
     return sp.get("pano") ?? sp.get("id") ?? null;
   }, []);
+  const startedWithDeepLink = useRef(Boolean(deepLinkId)); // true only on first render if URL had pano/id
 
-  const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
-  const [panoOnlyLoading, setPanoOnlyLoading] = useState(Boolean(deepLinkId));
+  // Panorama state
+  const [selectedPano, setSelectedPano] = useState(null);
+  const [selectedPanoMeta, setSelectedPanoMeta] = useState(null);
+  const [panoLoading, setPanoLoading] = useState(Boolean(deepLinkId));
 
-  const [selectedPano, setSelectedPano] = useState(null);       // image url
-  const [selectedPanoMeta, setSelectedPanoMeta] = useState(null); // lat/lng, northOffsetDeg
-  const [scanOpen, setScanOpen] = useState(false);               // mobile scanner
+  // Scanner
+  const [scanOpen, setScanOpen] = useState(false);
 
-  // Cesium state (loaded regardless of panoOnly)
+  // Cesium data (always kept in memory; we never unmount Viewer)
   const [tilesetUrl, setTilesetUrl] = useState(null);
   const [models, setModels] = useState([]);
-  const [selectedMarker, setSelectedMarker] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [views, setViews] = useState([]);
-  const [isLoading, setIsLoading] = useState(!panoOnly);
-  const [error, setError] = useState(null);
-  const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [clipping, setClipping] = useState(null);
 
-  // Ensure Cesium canvas resizes to true viewport height on device rotation/resize
+  const [isLoading, setIsLoading] = useState(!startedWithDeepLink.current); // if deep-linked, we can defer map loading
+  const [error, setError] = useState(null);
+
+  // Resize fix
   useEffect(() => {
     const onResize = () => {
       const v = viewerRef.current?.cesiumElement;
@@ -102,136 +103,55 @@ export default function CesiumViewer() {
     };
   }, []);
 
+  // Pause/resume render loop when pano overlay is shown
   useEffect(() => {
     const v = viewerRef.current?.cesiumElement;
     if (!v) return;
     const canvas = v.canvas;
     if (selectedPano) {
-      v.useDefaultRenderLoop = false; // hard pause
+      v.useDefaultRenderLoop = false;
       if (canvas) canvas.style.visibility = "hidden";
     } else {
-      v.useDefaultRenderLoop = true;  // resume
+      v.useDefaultRenderLoop = true;
       if (canvas) canvas.style.visibility = "visible";
-      v.scene.requestRender();        // render once to refresh
+      v.scene.requestRender();
     }
   }, [selectedPano]);
 
-  // --- QR Scan result handler ---
-  const handleScanResult = useCallback((result) => {
-    const raw = typeof result === "string" ? result : (result?.data ?? result?.text ?? "");
-    const value = String(raw).trim();
-    if (!value) return;
-
-    try {
-      const url = new URL(value, window.location.origin);
-      if (url.protocol === "http:" || url.protocol === "https:" || value.startsWith("/")) {
-        window.location.assign(url.toString());
-        return;
-      }
-    } catch {
-      // not a URL
-    }
-
-    const url2 = new URL(window.location.href);
-    url2.searchParams.set("pano", value);
-    window.location.assign(url2.toString());
-  }, []);
-
-  // Helper to render the mobile QR FAB + overlay consistently in every state
-  const renderQRUI = useCallback(() => (
-    <>
-      {/* Mobile-only QR button; hidden when pano/scanner open */}
-      {!scanOpen && !selectedPano && (
-        <button
-          onClick={() => setScanOpen(true)}
-          className="fixed top-5 left-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
-          aria-label="Scan QR"
-          type="button"
-        >
-          📷 Scan QR
-        </button>
-      )}
-
-      {scanOpen && (
-        <QRScanner
-          onDetected={(v) => { setScanOpen(false); handleScanResult(v); }}
-          onClose={() => setScanOpen(false)}
-        />
-      )}
-    </>
-  ), [scanOpen, selectedPano, handleScanResult]);
-
-  // --- PANO-ONLY FLOW (deep link) ---
-  useEffect(() => {
-    if (!panoOnly) return;
-
-    let aborted = false;
-    (async () => {
-      try {
-        setPanoOnlyLoading(true);
-        const r = await fetch("/panoramaPoints.json");
-        if (!r.ok) throw new Error("Failed to load panorama points");
-        const list = await r.json();
-        const found = list.find((p) => String(p.id) === String(deepLinkId));
-        if (!found) throw new Error("Panorama not found: " + deepLinkId);
-        if (aborted) return;
-        setSelectedPano(found.imageUrl);
-        setSelectedPanoMeta(found); // includes northOffsetDeg
-      } catch (e) {
-        if (!aborted) setError(e.message);
-      } finally {
-        if (!aborted) setPanoOnlyLoading(false);
-      }
-    })();
-    return () => { aborted = true; };
-  }, [panoOnly, deepLinkId]);
-
-  const closePanoOnly = useCallback(() => {
-    // strip query, and switch to full Cesium
-    const url = new URL(window.location.href);
-    url.searchParams.delete("pano");
-    url.searchParams.delete("id");
-    window.history.replaceState({}, "", url.toString());
-    setSelectedPano(null);
-    setSelectedPanoMeta(null);
-    setPanoOnly(false);          // leave pano-only, go to Cesium viewer
-    setPanoOnlyLoading(false);   // kill loading overlay if any
-    setScanOpen(false);          // don't auto-open scanner
-  }, []);
-
-  // --- ALWAYS load Cesium resources (even while in pano-only) ---
+  // Load Cesium resources (we keep this component mounted all the time)
   useEffect(() => {
     Ion.defaultAccessToken = ION_TOKEN;
   }, []);
 
   useEffect(() => {
+    // If we started with a deep link, we can defer map fetches until the pano is closed
+    if (startedWithDeepLink.current && selectedPano) return;
+
     const aborter = new AbortController();
     let ignore = false;
 
-    const isAbort = (reason) =>
-      reason && (reason.name === "AbortError" || reason.code === 20);
+    const isAbort = (reason) => reason && (reason.name === "AbortError" || reason.code === 20);
 
     const loadResources = async () => {
       setIsLoading(true);
       setError(null);
       try {
         const results = await Promise.allSettled([
-          IonResource.fromAssetId(TILESET_ASSET_ID), // 0 tileset
+          IonResource.fromAssetId(TILESET_ASSET_ID),
           fetch("/models.json", { signal: aborter.signal }).then((r) =>
             r.ok ? r.json() : Promise.reject(new Error("Failed to load models"))
-          ), // 1 models (optional)
+          ),
           fetch("/markers.json", { signal: aborter.signal }).then((r) =>
             r.ok ? r.json() : Promise.reject(new Error("Failed to load markers"))
-          ), // 2 markers (optional)
+          ),
           fetch("/views.json", { signal: aborter.signal }).then((r) =>
             r.ok ? r.json() : Promise.reject(new Error("Failed to load views"))
-          ), // 3 views (optional)
+          ),
           fetch("/panoramaPoints.json", { signal: aborter.signal }).then((r) =>
             r.ok ? r.json() : Promise.reject(new Error("Failed to load panorama points"))
-          ), // 4 panos (optional)
+          ),
         ]);
 
-        // Tileset (critical)
         if (results[0].status === "fulfilled") {
           if (!ignore) setTilesetUrl(results[0].value);
         } else if (!isAbort(results[0].reason)) {
@@ -239,7 +159,6 @@ export default function CesiumViewer() {
           if (!ignore) setError((e) => (e ? e + " | Tileset failed" : "Tileset failed"));
         }
 
-        // Models (optional)
         if (results[1].status === "fulfilled") {
           try {
             const modelsData = Array.isArray(results[1].value) ? results[1].value : [];
@@ -260,29 +179,16 @@ export default function CesiumViewer() {
           } catch (e) {
             console.warn("Model processing error (non-critical):", e);
           }
-        } else if (!isAbort(results[1].reason)) {
-          console.warn(results[1].reason || "Models fetch failed (non-critical)");
         }
 
-        // Markers (optional)
         if (results[2].status === "fulfilled") {
           if (!ignore) setMarkers(results[2].value);
-        } else if (!isAbort(results[2].reason)) {
-          console.warn(results[2].reason || "Markers failed (non-critical)");
         }
-
-        // Views (optional)
         if (results[3].status === "fulfilled") {
           if (!ignore) setViews(results[3].value);
-        } else if (!isAbort(results[3].reason)) {
-          console.warn(results[3].reason || "Views failed (non-critical)");
         }
-
-        // Panoramas (optional)
         if (results[4].status === "fulfilled") {
           if (!ignore) setPanoramaPoints(results[4].value);
-        } else if (!isAbort(results[4].reason)) {
-          console.warn(results[4].reason || "Panorama points failed (non-critical)");
         }
       } catch (err) {
         if (!isAbort(err)) {
@@ -299,8 +205,9 @@ export default function CesiumViewer() {
       ignore = true;
       aborter.abort();
     };
-  }, []);
+  }, [selectedPano]);
 
+  // Load footprint clipping
   const loadGeoJsonFromIon = useCallback(async (viewer) => {
     if (!viewer) return;
     try {
@@ -358,28 +265,130 @@ export default function CesiumViewer() {
     setSelectedMarker(null);
   }, []);
 
+  // --- QR Scan: open pano WITHOUT navigating ---
+  const openPanoById = useCallback(
+    async (idOrUrl) => {
+      // Accept id or raw value. Try to parse an id first.
+      let id = null;
+      try {
+        const maybeUrl = new URL(String(idOrUrl), window.location.origin);
+        const sp = maybeUrl.searchParams;
+        id = sp.get("pano") ?? sp.get("id");
+        if (!id && !maybeUrl.search) {
+          // If it's a bare value or path without query, treat pathname/last segment as id
+          id = maybeUrl.pathname.split("/").filter(Boolean).pop();
+        }
+      } catch {
+        id = String(idOrUrl);
+      }
+      if (!id) return;
+
+      // If pano list not yet loaded, fetch it quickly (no page reload)
+      let list = panoramaPoints;
+      if (!list || list.length === 0) {
+        try {
+          setPanoLoading(true);
+          const r = await fetch("/panoramaPoints.json");
+          if (r.ok) list = await r.json();
+        } catch {}
+      }
+      const found = Array.isArray(list) ? list.find((p) => String(p.id) === String(id)) : null;
+      if (!found) {
+        setError("Panorama not found: " + id);
+        setPanoLoading(false);
+        return;
+      }
+
+      // Update URL without reloading
+      const url2 = new URL(window.location.href);
+      url2.searchParams.set("pano", String(found.id));
+      window.history.pushState({}, "", url2.toString());
+
+      setSelectedPano(found.imageUrl);
+      setSelectedPanoMeta(found);
+      setPanoLoading(false);
+      setScanOpen(false);
+      // Important: we DO NOT unmount the Viewer, so tiles stay in memory.
+    },
+    [panoramaPoints]
+  );
+
+  const handleScanResult = useCallback(
+    (result) => {
+      const raw = typeof result === "string" ? result : (result?.data ?? result?.text ?? "");
+      const value = String(raw).trim();
+      if (!value) return;
+      openPanoById(value); // no navigation
+    },
+    [openPanoById]
+  );
+
+  // Deep-link on initial load (URL had ?pano= or ?id=)
+  useEffect(() => {
+    if (!deepLinkId) return;
+    (async () => {
+      try {
+        setPanoLoading(true);
+        await openPanoById(deepLinkId);
+      } finally {
+        setPanoLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkId]);
+
   const handlePanoClose = useCallback(() => {
+    // Remove pano params from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete("pano");
+    url.searchParams.delete("id");
+    window.history.pushState({}, "", url.toString());
+
     setSelectedPano(null);
     setSelectedPanoMeta(null);
-  }, []);
+    setPanoLoading(false);
+
+    // After a true deep-link close, we may need to load the map just now
+    if (startedWithDeepLink.current) {
+      startedWithDeepLink.current = false; // so future scans won't defer map
+      // Trigger map load if it wasn't done yet
+      setIsLoading((x) => x || !tilesetUrl);
+    }
+  }, [tilesetUrl]);
+
+  // QR UI overlay
+  const renderQRUI = useCallback(() => (
+    <>
+      {!scanOpen && !selectedPano && (
+        <button
+          onClick={() => setScanOpen(true)}
+          className="fixed top-5 left-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
+          aria-label="Scan QR"
+          type="button"
+        >
+          📷 Scan QR
+        </button>
+      )}
+
+      {scanOpen && (
+        <QRScanner
+          onDetected={(v) => { setScanOpen(false); handleScanResult(v); }}
+          onClose={() => setScanOpen(false)}
+        />
+      )}
+    </>
+  ), [scanOpen, selectedPano, handleScanResult]);
 
   // --- RENDER ---
 
-  // ERROR: still show QR UI
   if (error) {
     return (
-      <div
-        className="relative w-full"
-        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
+      <div className="relative w-full" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600">
           <div className="text-center p-4 max-w-md">
-            <h2 className="text-xl font-bold mb-2">Error Loading Map</h2>
+            <h2 className="text-xl font-bold mb-2">Error Loading</h2>
             <p>{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-red-100 rounded hover:bg-red-200"
-            >
+            <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-100 rounded hover:bg-red-200">
               Try Again
             </button>
           </div>
@@ -389,73 +398,17 @@ export default function CesiumViewer() {
     );
   }
 
-  // PANO-ONLY BRANCH
-  if (panoOnly) {
-    return (
-      <div
-        className="relative w-full"
-        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        {error && (
-          <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-600">
-            <div className="text-center p-4 max-w-md">
-              <h2 className="text-xl font-bold mb-2">Error</h2>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
+  // Show a light loader only when the pano itself is being fetched
+  const showPanoLoader = panoLoading && !selectedPano;
 
-        {/* Loading while fetching a deep-linked pano */}
-        {!error && panoOnlyLoading && (
-          <div className="w-full h-full flex items-center justify-center bg-blue-50">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-blue-600">Panorama Laden...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Show pano when available */}
-        {!error && selectedPano && (
-          <PanoramaViewer
-            image={selectedPano}
-            onClose={closePanoOnly}
-            initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
-            gyroscopeAbsolute={false}
-          />
-        )}
-
-        {renderQRUI()}
-      </div>
-    );
-  }
-
-  // CESIUM FLOW (ready or loading)
-  if (isLoading) {
-    return (
-      <div
-        className="relative w-full"
-        style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center bg-blue-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-blue-600">Laden 3D Map...</p>
-          </div>
-        </div>
-        {renderQRUI()}
-      </div>
-    );
-  }
-
-  // READY: Cesium viewer
   return (
-    <div
-      className="relative w-full"
-      style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
+    <div className="relative w-full" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
-        {tilesetUrl && (
+        {/* IMPORTANT:
+            - We always keep the Viewer mounted (so memory stays warm).
+            - If the app STARTED via deep link, skip creating the tileset while pano is open
+              to avoid paying for map data until the user closes the pano. */}
+        {tilesetUrl && !(startedWithDeepLink.current && selectedPano) && (
           <Cesium3DTileset
             url={tilesetUrl}
             maximumScreenSpaceError={16}
@@ -486,45 +439,52 @@ export default function CesiumViewer() {
           />
         ))}
 
-        {panoramaPoints.map((pano) => (
+        {panoramaPoints.map((p) => (
           <Entity
-            key={pano.id}
-            name={pano.name}
-            position={Cartesian3.fromDegrees(pano.longitude, pano.latitude, pano.height)}
+            key={p.id}
+            name={p.name}
+            position={Cartesian3.fromDegrees(p.longitude, p.latitude, p.height)}
             billboard={{ image: "/blue_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
             onClick={() => {
-              setScanOpen(false); // ensure scanner is not showing
-              setSelectedPano(pano.imageUrl);
-              setSelectedPanoMeta(pano); // has northOffsetDeg
+              setScanOpen(false);
+              setSelectedPano(p.imageUrl);
+              setSelectedPanoMeta(p);
+              // Update URL without reload
+              const url = new URL(window.location.href);
+              url.searchParams.set("pano", String(p.id));
+              window.history.pushState({}, "", url.toString());
             }}
           />
         ))}
       </Viewer>
 
-      {selectedPano && (
-        <PanoramaViewer
-          image={selectedPano}
-          onClose={handlePanoClose}
-          initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
-          gyroscopeAbsolute={false}
-        />
+      {/* Pano overlay */}
+      {(showPanoLoader || selectedPano) && (
+        <div className="absolute inset-0 z-[10050]">
+          {showPanoLoader && (
+            <div className="w-full h-full flex items-center justify-center bg-blue-50">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"></div>
+                <p className="mt-4">Panorama Laden...</p>
+              </div>
+            </div>
+          )}
+
+          {selectedPano && (
+            <PanoramaViewer
+              image={selectedPano}
+              onClose={handlePanoClose}
+              initialYawDeg={Number(selectedPanoMeta?.northOffsetDeg ?? 0)}
+              gyroscopeAbsolute={false}
+            />
+          )}
+        </div>
       )}
 
-      {/* nav controls (hidden when pano/scanner open) */}
-      {!selectedPano && !scanOpen && (
-        <div
-          className="absolute inset-x-0 z-50"
-          style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-        >
-          <div
-            className="
-              mx-auto max-w-full
-              flex gap-2 justify-center
-              flex-wrap
-              overflow-x-auto
-              px-2
-            "
-          >
+      {/* Nav controls (hidden when pano/scanner open) */}
+      {!selectedPano && !scanOpen && !isLoading && (
+        <div className="absolute inset-x-0 z-50" style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+          <div className="mx-auto max-w-full flex gap-2 justify-center flex-wrap overflow-x-auto px-2">
             {Object.entries(views).map(([name, view]) => (
               <FlyToButton
                 key={name}
@@ -533,17 +493,22 @@ export default function CesiumViewer() {
                 className="flex-shrink-0"
               />
             ))}
-            <CameraLogger
-              viewerRef={viewerRef}
-              label="Log View"
-              className="flex-shrink-0"
-            />
+            <CameraLogger viewerRef={viewerRef} label="Log View" className="flex-shrink-0" />
+          </div>
+        </div>
+      )}
+
+      {/* Initial map loader (won't show during an in-session QR pano) */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-blue-50 z-[10]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"></div>
+            <p className="mt-4">Laden 3D Map...</p>
           </div>
         </div>
       )}
 
       <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
-
       {renderQRUI()}
     </div>
   );
