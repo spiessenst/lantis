@@ -399,11 +399,13 @@ export default function CesiumViewer() {
     setSelectedMarker(null);
   }, []);
 
+
+
+
   const handlePanoClose = useCallback(() => {
-    setSelectedPano(null);
-    setSelectedPanoMeta(null);
-    if (isMobile) setScanOpen(true); // back to scanner on mobile
-  }, [isMobile]);
+   setSelectedPano(null);
+   setSelectedPanoMeta(null);
+ }, []);
 
   // ERROR: still show QR UI
   if (error) {
@@ -492,6 +494,7 @@ export default function CesiumViewer() {
             position={Cartesian3.fromDegrees(pano.longitude, pano.latitude, pano.height)}
             billboard={{ image: "/blue_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
             onClick={() => {
+                  setScanOpen(false); // ensure scanner is not showing
               setSelectedPano(pano.imageUrl);
               setSelectedPanoMeta(pano); // has northOffsetDeg
             }}
