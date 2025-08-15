@@ -196,8 +196,7 @@ export default function CesiumViewer() {
     window.history.replaceState({}, "", url.toString());
     setSelectedPano(null);
     setSelectedPanoMeta(null);
-     setPanoOnly(false);          // leave pano-only branch
-   setPanoOnlyLoading(false);   // kill loading overlay if any
+   setPanoOnlyLoading(false);
     if (isMobile) setScanOpen(true); // return to scanner on mobile
   }, [isMobile]);
 
@@ -217,14 +216,24 @@ export default function CesiumViewer() {
           </div>
         )}
 
-        {!error && (panoOnlyLoading || !selectedPano) && (
-          <div className="w-full h-full flex items-center justify-center bg-blue-50">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-blue-600">Panorama Laden...</p>
-            </div>
-          </div>
-        )}
+       {/* Loading while we fetch the deep-linked pano */}+ {!error && panoOnlyLoading && (
+   <div className="w-full h-full flex items-center justify-center bg-blue-50">
+     <div className="text-center">
+       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+       <p className="mt-4 text-blue-600">Panorama Laden...</p>
+     </div>
+   </div>
+ )}
+
+ {/* Idle state: no pano selected — show a simple background; QR overlay will appear */}
+ {!error && !panoOnlyLoading && !selectedPano && (
+   <div className="w-full h-full flex items-center justify-center bg-gray-50">
+     <div className="text-center text-gray-600">
+       <p className="mb-2">Scan een QR-code om een panorama te openen</p>
+       <p className="text-sm opacity-70">(of sluit deze en ga terug)</p>
+     </div>
+   </div>
+)}
 
         {!error && selectedPano && (
           <PanoramaViewer
