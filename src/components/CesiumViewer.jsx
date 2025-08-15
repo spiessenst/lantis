@@ -57,6 +57,8 @@ function useIsMobile() {
   return isMobile;
 }
 
+
+
 export default function CesiumViewer() {
   const viewerRef = useRef(null);
   const isMobile = useIsMobile();
@@ -100,6 +102,18 @@ export default function CesiumViewer() {
       window.removeEventListener("orientationchange", onResize);
     };
   }, []);
+
+    useEffect(() => {
+    const v = viewerRef.current?.cesiumElement;
+    if (!v) return;
+
+    if (selectedPano) {
+      v.useDefaultRenderLoop = false; // hard pause
+    } else {
+      v.useDefaultRenderLoop = true;  // resume
+      v.scene.requestRender();        // render once to refresh
+    }
+  }, [selectedPano]);
 
   // --- QR Scan result handler ---
   const handleScanResult = useCallback((result) => {

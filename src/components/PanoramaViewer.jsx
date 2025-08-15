@@ -71,26 +71,45 @@ export default function PanoramaViewer({
           loadingImg: false,
           touchmoveTwoFingers: true,
           size: { width: "100%", height: "100%" },
+           rendererOptions: {
+    antialias: false,                 // big win
+    alpha: false,
+    powerPreference: "high-performance",
+    preserveDrawingBuffer: false,
+    failIfMajorPerformanceCaveat: true,
+  },
           plugins: [
-            [GyroscopePlugin, { absolutePosition: gyroscopeAbsolute, moveMode: "smooth", roll: true }],
+           // [GyroscopePlugin, { absolutePosition: gyroscopeAbsolute, moveMode: "smooth", roll: true }],
+            [GyroscopePlugin, { absolutePosition: gyroscopeAbsolute, moveMode: "fast", roll: false }],
           ],
         });
         viewerRef.current = viewer;
 
-        const onReady = async () => {
-          if (destroyed) return;
-          setLoading(false);
-          // Ensure initial yaw is applied on all builds
-          setYawInstant(yawDeg);
+    const onReady = async () => {
+  if (destroyed) return;
+  setLoading(false);
 
-          const gyro = viewer.getPlugin(GyroscopePlugin);
-          gyroRef.current = gyro;
-          try {
-            await gyro.start(); // iOS may require a user gesture/permission
-          } catch {
-            setNeedsMotionPerm(true);
-          }
-        };
+  // Ensure initial yaw is applied on all builds
+  setYawInstant(yawDeg);
+
+  // 🔹 Clamp device pixel ratio to reduce GPU load
+  try {
+    const maxDPR = window.matchMedia("(max-width: 768px)").matches ? 1.25 : 2;
+    // @ts-ignore - viewer.renderer is from three.js
+    viewer.renderer?.setPixelRatio?.(
+      Math.min(window.devicePixelRatio || 1, maxDPR)
+    );
+    viewer.refresh?.();
+  } catch {}
+
+  const gyro = viewer.getPlugin(GyroscopePlugin);
+  gyroRef.current = gyro;
+  try {
+    await gyro.start(); // iOS may require a user gesture/permission
+  } catch {
+    setNeedsMotionPerm(true);
+  }
+};
 
         viewer.addEventListener("ready", onReady);
 

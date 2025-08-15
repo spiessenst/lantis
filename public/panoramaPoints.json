@@ -16,7 +16,8 @@
        "longitude": 4.4,
        "height": 50,
        "imageUrl": "/panoramas/mag.png",
-       "northOffsetDeg": 0
+       "northOffsetDeg": 355
+
 
   }
 ]
