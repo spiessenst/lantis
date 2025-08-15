@@ -68,7 +68,8 @@ export default function CesiumViewer() {
     const sp = new URLSearchParams(window.location.search);
     return sp.get("pano") ?? sp.get("id") ?? null;
   }, []);
-const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
+
+  const [panoOnly, setPanoOnly] = useState(Boolean(deepLinkId));
   const [panoOnlyLoading, setPanoOnlyLoading] = useState(Boolean(deepLinkId));
 
   const [selectedPano, setSelectedPano] = useState(null);       // image url
