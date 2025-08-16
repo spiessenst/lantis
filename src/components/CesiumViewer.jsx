@@ -13,6 +13,8 @@ import {
   ClippingPolygon,
 } from "cesium";
 
+import { QrCode } from "lucide-react";
+
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
 import CameraLogger from "./CameraLogger";
@@ -87,7 +89,7 @@ export default function CesiumViewer() {
   const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
 
-  // Ensure Cesium canvas resizes to true viewport height on device rotation/resize
+/*   // Ensure Cesium canvas resizes to true viewport height on device rotation/resize
   useEffect(() => {
     const onResize = () => {
       const v = viewerRef.current?.cesiumElement;
@@ -102,7 +104,7 @@ export default function CesiumViewer() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
     };
-  }, []);
+  }, []); */
 
     useEffect(() => {
     const v = viewerRef.current?.cesiumElement;
@@ -146,11 +148,11 @@ export default function CesiumViewer() {
       {!scanOpen && !selectedPano && (
         <button
           onClick={() => setScanOpen(true)}
-          className="fixed top-5 left-5 z-[10060] rounded-full p-4 bg-white/90 shadow-lg border border-black/10 md:hidden pointer-events-auto"
+         className="fixed top-5 left-5 z-[10060] rounded-full p-4 bg-[#009391] shadow-lg border border-black/10 md:hidden pointer-events-auto"
           aria-label="Scan QR"
           type="button"
         >
-          📷 Scan QR
+         <QrCode className="w-6 h-6 text-white" />
         </button>
       )}
 
@@ -216,7 +218,8 @@ export default function CesiumViewer() {
           </div>
         )}
 
-       {/* Loading while we fetch the deep-linked pano */}+ {!error && panoOnlyLoading && (
+       {/* Loading while we fetch the deep-linked pano */} 
+       {!error && panoOnlyLoading && (
    <div className="w-full h-full flex items-center justify-center bg-blue-50">
      <div className="text-center">
        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>

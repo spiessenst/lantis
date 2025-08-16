@@ -95,7 +95,7 @@ export default function QRScanner({ onDetected, onClose }) {
     };
   }, [onDetected]);
 
-  const toggleTorch = async () => {
+/*   const toggleTorch = async () => {
     try {
       const track = trackRef.current;
       if (!track) return;
@@ -106,7 +106,7 @@ export default function QRScanner({ onDetected, onClose }) {
     } catch (e) {
       console.warn("Torch toggle failed", e);
     }
-  };
+  }; */
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black/90 text-white flex flex-col">
@@ -122,7 +122,7 @@ export default function QRScanner({ onDetected, onClose }) {
         <button onClick={onClose} className="bg-white/90 text-black px-4 py-2 rounded-full shadow">
           Close
         </button>
-        <div className="flex items-center gap-2">
+      {/*   <div className="flex items-center gap-2">
           <button
             onClick={toggleTorch}
             className="bg-white/90 text-black px-3 py-2 rounded-full shadow disabled:opacity-50"
@@ -132,7 +132,7 @@ export default function QRScanner({ onDetected, onClose }) {
             🔦 Torch
           </button>
           {usingZXing && <span className="text-xs bg-white/20 px-2 py-1 rounded">ZXing fallback</span>}
-        </div>
+        </div> */}
       </div>
 
       {error && (

@@ -41,11 +41,11 @@
 }
 
 
-/* Optional: Hide Cesium credit watermark 
+/* Optional: Hide Cesium credit watermark */
 .cesium-widget-credits{
   display: none !important;
 }
-*/
+
 
 .cesium-viewer-selectionIndicatorContainer , .cesium-infoBox-camera {
   display: none !important;
