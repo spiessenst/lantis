@@ -14,6 +14,7 @@ import {
 } from "cesium";
 
 import { QrCode } from "lucide-react";
+import { X } from "lucide-react";
 
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
@@ -358,7 +359,8 @@ export default function CesiumViewer() {
         <div className="absolute inset-0 flex items-center justify-center bg-[#009391]/5">
           <div className="text-center">
             <div
-              className="animate-spin rounded-full h-12 w-12 border-2 border-b-transparent mx-auto"
+             className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto"
+
               style={{ borderColor: "#009391" }}
             />
             <p className="mt-4" style={{ color: "#009391" }}>Laden 3D Map...</p>

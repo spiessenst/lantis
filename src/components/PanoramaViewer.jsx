@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Viewer as PSVViewer } from "@photo-sphere-viewer/core";
 import "@photo-sphere-viewer/core/index.css";
 import { GyroscopePlugin } from "@photo-sphere-viewer/gyroscope-plugin";
-
+import { X } from "lucide-react";
 /**
  * Props:
  *  - image (string, required): URL to the equirectangular panorama
@@ -151,7 +151,7 @@ export default function PanoramaViewer({
         type="button"
         aria-label="Close panorama viewer"
       >
-        ✕ Close
+       <X className="w-5 h-5" />
       </button>
 
       {needsMotionPerm && (
@@ -166,12 +166,17 @@ export default function PanoramaViewer({
 
       {loading && (
         <div className="w-full h-screen flex items-center justify-center bg-blue-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-blue-600">Panorama Laden...</p>
+           <div className="text-center">
+            <div
+             className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto"
+
+              style={{ borderColor: "#009391" }}
+            />
+            <p className="mt-4" style={{ color: "#009391" }}>Panorama laden...</p>
           </div>
         </div>
       )}
+      
 
       {error && (
         <div className="w-full h-full flex flex-col items-center justify-center bg-black/50 text-white p-4">

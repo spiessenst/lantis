@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 
 /**
  * Mobile QR Scanner overlay
@@ -120,8 +121,11 @@ export default function QRScanner({ onDetected, onClose }) {
 
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
         <button onClick={onClose} className="bg-white/90 text-black px-4 py-2 rounded-full shadow">
-          Close
+         <X className="w-5 h-5" />
         </button>
+
+
+        
       {/*   <div className="flex items-center gap-2">
           <button
             onClick={toggleTorch}
