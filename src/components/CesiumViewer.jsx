@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Viewer, Cesium3DTileset, Entity } from "resium";
+import { useCallback, useEffect, useRef, useState  } from "react";
+import { Viewer, Cesium3DTileset, Entity  } from "resium";
 import {
   Cartesian3,
   Ion,
@@ -11,6 +11,14 @@ import {
   defined,
   ClippingPolygonCollection,
   ClippingPolygon,
+CesiumTerrainProvider ,
+ HeightReference,
+   DistanceDisplayCondition,
+   HeadingPitchRoll,
+   Transforms,
+  Math as CesiumMath,
+
+
 } from "cesium";
 
 import { QrCode } from "lucide-react";
@@ -22,7 +30,8 @@ import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
 import QRScanner from "./QRScanner";
 
-// ⚠️ In productie: token niet client-side bundelen.
+
+// In productie: token niet client-side bundelen.
 const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
 Ion.defaultAccessToken = ION_TOKEN;
 
@@ -307,7 +316,7 @@ export default function CesiumViewer() {
       setError("Failed to configure tileset: " + err.message);
       console.error("Tileset configuration error:", err);
     }
-    loadGeoJsonFromIon(viewer);
+  loadGeoJsonFromIon(viewer);
   }, [loadGeoJsonFromIon, views]);
 
   // Fly-to helper
@@ -330,6 +339,8 @@ export default function CesiumViewer() {
     // Geen URL-mutaties.
     if (isMobile) setScanOpen(true); // optioneel: scanner terug openen op mobiel
   }, [isMobile]);
+
+   
 
   // --- Render states ---
   if (error) {
@@ -376,7 +387,7 @@ export default function CesiumViewer() {
       className="relative w-full"
       style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}>
+      <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}  >
         {tilesetUrl && (
           <Cesium3DTileset
             url={tilesetUrl}
@@ -387,6 +398,8 @@ export default function CesiumViewer() {
             onReady={handleTilesetReady}
           />
         )}
+
+
 
         {models.map(({ id, url, maximumScreenSpaceError = 16 }) => (
           <Cesium3DTileset

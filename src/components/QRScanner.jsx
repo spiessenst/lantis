@@ -12,7 +12,7 @@ export default function QRScanner({ onDetected, onClose }) {
   const zxingReaderRef = useRef(null);
 
   const [error, setError] = useState(null);
-  const [torchOn, setTorchOn] = useState(false);
+  //const [torchOn, setTorchOn] = useState(false);
   const [usingZXing, setUsingZXing] = useState(false);
 
   useEffect(() => {

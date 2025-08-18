@@ -1,6 +1,6 @@
 [
   {
-       "id": "central-plaza",
+       "id": "SBE1",
        "name": "Central Plaza",
        "latitude": 51.23407,
        "longitude": 4.3663,
@@ -10,7 +10,7 @@
 
   },
     {
-       "id": "mag",
+       "id": "goqr",
        "name": "mag thuis",
        "latitude": 51.24,
        "longitude": 4.4,
