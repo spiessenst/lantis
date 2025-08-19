@@ -2,12 +2,11 @@
   {
        "id": "SBE1",
        "name": "Central Plaza",
-       "latitude": 51.23407,
-       "longitude": 4.3663,
+       "latitude": 51.23138,
+       "longitude": 4.36056,
        "height": 50,
        "imageUrl": "/panoramas/panotest.jpg",
        "northOffsetDeg": 90
-
   },
     {
        "id": "goqr",
@@ -17,7 +16,6 @@
        "height": 50,
        "imageUrl": "/panoramas/mag.png",
        "northOffsetDeg": 355
-
 
   }
 ]

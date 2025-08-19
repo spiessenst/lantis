@@ -11,14 +11,7 @@ import {
   defined,
   ClippingPolygonCollection,
   ClippingPolygon,
-CesiumTerrainProvider ,
- HeightReference,
-   DistanceDisplayCondition,
-   HeadingPitchRoll,
-   Transforms,
-  Math as CesiumMath,
-
-
+  CustomShader,ImageBasedLighting, Cartesian2
 } from "cesium";
 
 import { QrCode } from "lucide-react";
@@ -401,13 +394,18 @@ export default function CesiumViewer() {
 
 
 
-        {models.map(({ id, url, maximumScreenSpaceError = 16 }) => (
+        {models.map(({ id, url, maximumScreenSpaceError  }) => (
           <Cesium3DTileset
             key={id}
             url={url}
             maximumScreenSpaceError={maximumScreenSpaceError}
             maximumMemoryUsage={512}
             shadows={ShadowMode.ENABLED}
+              onReady={(tileset) => {
+      tileset.imageBasedLighting = new ImageBasedLighting();
+      tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 0.0); // [diffuse, specular]
+    }}
+        
           />
         ))}
 

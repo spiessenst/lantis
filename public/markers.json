@@ -36,7 +36,7 @@
     "id": "marker-4",
     "name": "Toren 4",
     "description": "Toren 4 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
-    "image": "https://via.placeholder.com/300x200",
+    "image": "/images/render1.png",
     "longitude": 4.361,
     "latitude": 51.233,
     "height": 50,
