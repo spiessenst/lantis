@@ -1,9 +1,9 @@
 [
 
-   { "id": "zuid", "assetId": 3650318, "maximumScreenSpaceError": 32 },
-  { "id": "tunnel", "assetId": 3650329, "maximumScreenSpaceError": 32 },
-  { "id": "inzuid", "assetId": 3650339, "maximumScreenSpaceError": 32 },
- { "id": "bodem", "assetId": 3650334, "maximumScreenSpaceError": 32 }
+   { "id": "zuid", "assetId": 3650318, "maximumScreenSpaceError": 128 },
+  { "id": "tunnel", "assetId": 3650329, "maximumScreenSpaceError": 64 },
+  { "id": "inzuid", "assetId": 3650339, "maximumScreenSpaceError": 64 },
+ { "id": "bodem", "assetId": 3650334, "maximumScreenSpaceError": 128 }
 
 
 ]

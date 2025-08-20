@@ -423,12 +423,8 @@ export default function CesiumViewer() {
     return (
       <div className="relative w-full" style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="absolute inset-0 flex items-center justify-center bg-[#009391]/5">
-          <div className="text-center">
-            <div
-             className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto"
-
-              style={{ borderColor: "#009391" }}
-            />
+           <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto" />
             <p className="mt-4" style={{ color: "#009391" }}>Laden 3D Map...</p>
           </div>
         </div>
@@ -436,6 +432,7 @@ export default function CesiumViewer() {
       </div>
     );
   }
+
 
   return (
     <div
@@ -446,7 +443,7 @@ export default function CesiumViewer() {
         {tilesetUrl && (
           <Cesium3DTileset
             url={tilesetUrl}
-            maximumScreenSpaceError={16}
+           maximumScreenSpaceError={isMobile ? 16 : 10}
             maximumMemoryUsage={512}
         //    shadows={ShadowMode.ENABLED}
             clippingPolygons={clipping}
@@ -467,11 +464,7 @@ export default function CesiumViewer() {
       /* tileset.imageBasedLighting = new ImageBasedLighting();
       tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 0.0); // [diffuse, specular] */
 
-    
-const labelImageryLayer = ImageryLayer.fromProviderAsync(
-  IonImageryProvider.fromAssetId(3651610)
-);
-tileset.imageryLayers.add(labelImageryLayer);
+
       
     }}
              
