@@ -1,6 +1,6 @@
 [
 
-   { "id": "zuid", "assetId": 3651565, "maximumScreenSpaceError": 32 },
+   { "id": "zuid", "assetId": 3650318, "maximumScreenSpaceError": 32 },
   { "id": "tunnel", "assetId": 3650329, "maximumScreenSpaceError": 32 },
   { "id": "inzuid", "assetId": 3650339, "maximumScreenSpaceError": 32 },
  { "id": "bodem", "assetId": 3650334, "maximumScreenSpaceError": 32 }

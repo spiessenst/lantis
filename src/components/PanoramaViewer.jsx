@@ -166,13 +166,9 @@ export default function PanoramaViewer({
 
       {loading && (
         <div className="w-full h-screen flex items-center justify-center bg-blue-50">
-           <div className="text-center">
-            <div
-             className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto"
-
-              style={{ borderColor: "#009391" }}
-            />
-            <p className="mt-4" style={{ color: "#009391" }}>Panorama laden...</p>
+            <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#009391] border-b-transparent mx-auto" />
+            <p className="mt-4" style={{ color: "#009391" }}>Laden Panorama...</p>
           </div>
         </div>
       )}
