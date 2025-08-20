@@ -1,11 +1,9 @@
 [
-  { "id": "model1", "assetId": 3612039, "maximumScreenSpaceError": 128 },
-  { "id": "model3", "assetId": 3617878, "maximumScreenSpaceError": 128 },
-  { "id": "model2", "assetId": 3617044, "maximumScreenSpaceError": 128 },
-   { "id": "zuid", "assetId": 3644819, "maximumScreenSpaceError": 32 },
-  { "id": "noord", "assetId": 3621100, "maximumScreenSpaceError": 128 },
-  { "id": "inzuid", "assetId": 3621583, "maximumScreenSpaceError": 128 }
 
+   { "id": "zuid", "assetId": 3651565, "maximumScreenSpaceError": 32 },
+  { "id": "tunnel", "assetId": 3650329, "maximumScreenSpaceError": 32 },
+  { "id": "inzuid", "assetId": 3650339, "maximumScreenSpaceError": 32 },
+ { "id": "bodem", "assetId": 3650334, "maximumScreenSpaceError": 32 }
 
 
 ]

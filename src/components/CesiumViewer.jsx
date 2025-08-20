@@ -11,7 +11,9 @@ import {
   defined,
   ClippingPolygonCollection,
   ClippingPolygon,
-  CustomShader,ImageBasedLighting, Cartesian2
+  Color,
+  DirectionalLight, ImageBasedLighting , Cartesian2  ,ImageryLayer , IonImageryProvider
+ 
 } from "cesium";
 
 import { QrCode } from "lucide-react";
@@ -23,10 +25,11 @@ import CameraLogger from "./CameraLogger";
 import PanoramaViewer from "./PanoramaViewer";
 import QRScanner from "./QRScanner";
 
-
 // In productie: token niet client-side bundelen.
-const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
+//const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZGUxMjY5Ni0wZTAyLTQ5MDAtYTUxZi1jZjRjMTIyMzRmM2QiLCJpZCI6MTQ4MjkwLCJpYXQiOjE3NTQ2NjM0Nzd9.yFKwuluk4NO594-ARWwRcxOWlvLCbycKW3YBWnDOfTs";
+const ION_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxMTUyNzQ2Ni01NDBkLTRmMWMtYmM5Yy1mNDk3ZTZjNjhiZmUiLCJpZCI6MzMzMjkyLCJpYXQiOjE3NTU1OTQzNjJ9.0dGGgdyWBvgJ2kiBz7tp32c9xwJcIIJOYTjbfs5iIdY";
 Ion.defaultAccessToken = ION_TOKEN;
+
 
 const VIEWER_OPTIONS = {
   timeline: false,
@@ -38,7 +41,7 @@ const VIEWER_OPTIONS = {
   sceneModePicker: false,
   infoBox: false,
   selectionIndicator: false,
-  terrainShadows: ShadowMode.ENABLED,
+// terrainShadows: ShadowMode.ENABLED,
   shouldAnimate: false,
   requestRenderMode: true,
   maximumRenderTimeChange: 0.0,
@@ -82,6 +85,9 @@ export default function CesiumViewer() {
   const [error, setError] = useState(null);
   const [clipping, setClipping] = useState(null);
   const [panoramaPoints, setPanoramaPoints] = useState([]);
+
+  // Cache for cutouts across views
+  const cutoutCacheRef = useRef(new Map()); // key → positions[]
 
   // Canvas pauzeren/verbergen wanneer panorama open is (spaart GPU)
   useEffect(() => {
@@ -265,33 +271,87 @@ export default function CesiumViewer() {
     };
   }, []);
 
-  // GeoJSON → clipping
-  const loadGeoJsonFromIon = useCallback(async (viewer) => {
-    if (!viewer) return;
-    try {
-      const resource = await IonResource.fromAssetId(3617274);
-      const dataSource = await GeoJsonDataSource.load(resource, { clampToGround: true });
-      const footprint = dataSource.entities.values.find((e) => defined(e.polygon));
-      if (!footprint) return;
-      const hierarchy = footprint.polygon.hierarchy.getValue();
-      const positions = hierarchy?.positions ?? [];
-      if (!positions.length) return;
-      const clippingPolygons = new ClippingPolygonCollection({
-        polygons: [new ClippingPolygon({ positions })],
-      });
-      setClipping(clippingPolygons);
-    } catch (err) {
-      setError(err.message);
-      console.error("Failed to load or process GeoJSON:", err);
+  // --- CUTOUTS per-view -----------------------------------------------------
+  // "cutouts" can be: number (Ion assetId), string (URL), or object { assetId } / { href }
+  const specKey = (spec) => {
+    if (spec == null) return "null";
+    if (typeof spec === "number") return `ion:${spec}`;
+    if (typeof spec === "string") return `url:${spec}`;
+    if (typeof spec === "object") {
+      if (spec.assetId != null) return `ion:${spec.assetId}`;
+      if (spec.href) return `url:${spec.href}`;
     }
+    return JSON.stringify(spec);
+  };
+
+  const normalizeCutoutsForView = (view) => {
+    const raw = view?.cutouts;
+    if (!raw) return [];
+    if (raw === "none" || raw === "non") return [];
+    return Array.isArray(raw) ? raw : [raw];
+  };
+
+  const extractPolygonPositions = (dataSource) => {
+    const positionsArr = [];
+    for (const e of dataSource.entities.values) {
+      if (defined(e.polygon)) {
+        const hierarchy = e.polygon.hierarchy?.getValue?.();
+        const positions = hierarchy?.positions ?? [];
+        if (positions.length) positionsArr.push(positions);
+      }
+    }
+    return positionsArr;
+  };
+
+  const loadSingleCutout = async (spec) => {
+    const key = specKey(spec);
+    const cached = cutoutCacheRef.current.get(key);
+    if (cached) return cached; // reuse parsed positions
+
+    try {
+      let dataSource;
+      if (typeof spec === "number" || (typeof spec === "object" && spec?.assetId != null)) {
+        const assetId = typeof spec === "number" ? spec : spec.assetId;
+        const resource = await IonResource.fromAssetId(assetId);
+        dataSource = await GeoJsonDataSource.load(resource, { clampToGround: true });
+      } else {
+        const href = typeof spec === "string" ? spec : spec?.href;
+        dataSource = await GeoJsonDataSource.load(href, { clampToGround: true });
+      }
+      const positionsArr = extractPolygonPositions(dataSource);
+      cutoutCacheRef.current.set(key, positionsArr);
+      return positionsArr;
+    } catch (err) {
+      console.warn("Cutout load failed for", spec, err);
+      cutoutCacheRef.current.set(key, []);
+      return [];
+    }
+  };
+
+  const applyCutoutsForView = useCallback(async (view) => {
+    const specs = normalizeCutoutsForView(view);
+    if (!specs.length) { setClipping(null); return; }
+    const nested = await Promise.all(specs.map(loadSingleCutout));
+    const allPositions = nested.flat();
+    if (!allPositions.length) { setClipping(null); return; }
+    const polygons = allPositions.map((positions) => new ClippingPolygon({ positions }));
+    setClipping(new ClippingPolygonCollection({ polygons }));
   }, []);
+  // -------------------------------------------------------------------------
 
   // Tileset klaar → viewer configureren
   const handleTilesetReady = useCallback(() => {
     const viewer = viewerRef.current?.cesiumElement;
     if (!viewer) return;
     try {
+      // No default Cesium globe or sky
       viewer.scene.globe.show = false;
+     // viewer.scene.skyAtmosphere.show = false;
+      viewer.scene.skyBox.show = false;
+
+ 
+
+
       viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
       viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -304,15 +364,16 @@ export default function CesiumViewer() {
             orientation: firstView.orientation || {},
           });
         }
+        // Apply view-specific cutouts (0/1/many)
+        applyCutoutsForView(firstView);
       }
     } catch (err) {
       setError("Failed to configure tileset: " + err.message);
       console.error("Tileset configuration error:", err);
     }
-  loadGeoJsonFromIon(viewer);
-  }, [loadGeoJsonFromIon, views]);
+  }, [applyCutoutsForView, views]);
 
-  // Fly-to helper
+  // Fly-to helper - also updates cutouts to match selected view
   const handleFlyTo = useCallback((view) => {
     const viewer = viewerRef.current?.cesiumElement;
     if (!viewer) return;
@@ -323,7 +384,8 @@ export default function CesiumViewer() {
       duration: 2,
     });
     setSelectedMarker(null);
-  }, []);
+    applyCutoutsForView(view);
+  }, [applyCutoutsForView]);
 
   // Pano sluiten (alleen state)
   const handlePanoClose = useCallback(() => {
@@ -386,7 +448,7 @@ export default function CesiumViewer() {
             url={tilesetUrl}
             maximumScreenSpaceError={16}
             maximumMemoryUsage={512}
-            shadows={ShadowMode.ENABLED}
+        //    shadows={ShadowMode.ENABLED}
             clippingPolygons={clipping}
             onReady={handleTilesetReady}
           />
@@ -400,12 +462,19 @@ export default function CesiumViewer() {
             url={url}
             maximumScreenSpaceError={maximumScreenSpaceError}
             maximumMemoryUsage={512}
-            shadows={ShadowMode.ENABLED}
-              onReady={(tileset) => {
-      tileset.imageBasedLighting = new ImageBasedLighting();
-      tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 0.0); // [diffuse, specular]
+           // shadows={ShadowMode.ENABLED}
+ onReady={(tileset) => {
+      /* tileset.imageBasedLighting = new ImageBasedLighting();
+      tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 0.0); // [diffuse, specular] */
+
+    
+const labelImageryLayer = ImageryLayer.fromProviderAsync(
+  IonImageryProvider.fromAssetId(3651610)
+);
+tileset.imageryLayers.add(labelImageryLayer);
+      
     }}
-        
+             
           />
         ))}
 
