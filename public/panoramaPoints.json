@@ -7,14 +7,5 @@
        "height": 50,
        "imageUrl": "/panoramas/panotest.jpg",
        "northOffsetDeg": 90
-  },
-    {
-       "id": "goqr",
-       "name": "mag thuis",
-       "latitude": 51.24,
-       "longitude": 4.4,
-       "height": 50,
-       "imageUrl": "/panoramas/mag.png",
-       "northOffsetDeg": 355
   }
 ]

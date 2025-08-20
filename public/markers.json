@@ -1,41 +1,9 @@
 [
-  {
-    "id": "marker-1",
-    "name": "Punt 1",
-    "description": "Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone.Toren 1 is een belangricht over de werfzone. De constructie van de zicht over de werfzone. De constructie van de toren is een voorbeeld van duurzame architectuur en innovatieve engineering. Bezoekers kunnen hier informatie verkrijgen over de voortgang van de werken en de toekomstige ontwikkelingen in de regio.",
-    "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.3661591526447845,
-    "latitude": 51.23432010335795,
-    "height": 50,
-    "color": "GREEN",
-    "size": 10
-  },
-  {
-    "id": "marker-2",
-    "name": "Toren 2",
-    "description": "Toren 2 markeert de zuidgrens van het project en fungeert als logistiek centrum voor materiaalopslag. De toren is voorzien van moderne infrastructuur voor communicatie en monitoring. Daarnaast worden hier ook regelmatig werfvergaderingen gehouden. De omliggende zone wordt in de toekomst ingericht als groenzone met wandel- en fietspaden die aansluiten op het grotere mobiliteitsplan.",
-    "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.364,
-    "latitude": 51.230,
-    "height": 100,
-    "color": "GREEN",
-    "size": 12
-  },
-  {
-    "id": "marker-3",
-    "name": "Toren 3",
-    "description": "Toren 3 bevindt zich nabij een kruispunt van belangrijke verkeersassen en speelt een cruciale rol in het monitoren van verkeersstromen. Dankzij geavanceerde sensoren en camera’s wordt hier data verzameld over verkeer en luchtkwaliteit. Deze data wordt in real-time gedeeld met de centrale controlekamer, die beslissingen neemt over verkeersgeleiding en tijdelijke omleidingen.",
-    "image": "https://via.placeholder.com/300x200",
-    "longitude": 4.3695,
-    "latitude": 51.235,
-    "height": 50,
-    "color": "GREEN",
-    "size": 14
-  },
+
   {
     "id": "marker-4",
-    "name": "Toren 4",
-    "description": "Toren 4 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
+    "name": "Oosterweeltunnel Zuid",
+    "description": "De Oosterweelverbinding is een van de grootste infrastructuurprojecten in Vlaanderen en speelt een cruciale rol in de mobiliteit rond Antwerpen. Een belangrijk onderdeel daarvan is de Oosterweeltunnel Zuid, die de Schelde onderdoor kruist en zo de linker- en rechteroever beter met elkaar verbindt.\n\nDe tunnel is ontworpen om het doorgaand verkeer vlotter en veiliger te laten verlopen, en om de Antwerpse Ring te ontlasten. Vandaag de dag staat de Ring vaak symbool voor files en luchtvervuiling, maar met de Oosterweelverbinding – en dus ook de tunnel – wil men daar verandering in brengen. De nieuwe verbinding zal ervoor zorgen dat verkeer beter gespreid wordt, waardoor knelpunten verminderen.\n\nDe Oosterweeltunnel Zuid bestaat uit meerdere tunnelkokers en moderne veiligheidssystemen, zoals geavanceerde ventilatie, brandbeveiliging en nooduitgangen. Zo wil men niet alleen de doorstroming verbeteren, maar ook de veiligheid van de weggebruiker garanderen.\n\nDaarnaast maakt de aanleg deel uit van een breder plan om leefbaarheid en mobiliteit te combineren. Rond de tunnel worden fietsverbindingen en groenzones voorzien, zodat niet alleen automobilisten, maar ook fietsers en omwonenden voordeel halen uit het project.\n\nDe Oosterweeltunnel Zuid vormt dus meer dan een technische ingreep: het is een belangrijke stap naar een duurzamere en beter verbonden regio.",
     "image": "/images/render1.png",
     "longitude": 4.361,
     "latitude": 51.233,
@@ -45,9 +13,9 @@
   },
   {
     "id": "marker-5",
-    "name": "Toren 5",
-    "description": "Toren 5 is gelegen aan de rand van het natuurgebied en fungeert als uitvalsbasis voor ecologische monitoring. Hier worden onder andere vogels, vleermuizen en plantenpopulaties bestudeerd. De toren maakt deel uit van het plan om het bouwproject in harmonie te laten verlopen met de natuurlijke omgeving. Informatieborden en een kleine expo geven uitleg aan bezoekers over de biodiversiteit in het gebied.",
-    "image": "https://via.placeholder.com/300x200",
+    "name": "Oosterweeltunnel",
+    "description": "De Oosterweeltunnel Zuid maakt deel uit van de grote Oosterweelverbinding in Antwerpen. De tunnel verbindt de linker- en rechteroever onder de Schelde en moet de drukte op de Ring verlichten. Met meerdere kokers, moderne veiligheidssystemen en extra fietsverbindingen draagt de tunnel bij aan betere mobiliteit en leefbaarheid. Het project wil niet enkel files verminderen, maar ook de regio duurzamer en veiliger maken voor alle weggebruikers.",
+    "image": "/images/tunnel.png",
     "longitude": 4.3645,
     "latitude": 51.238,
     "height": 50,

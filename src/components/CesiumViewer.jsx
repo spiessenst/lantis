@@ -486,7 +486,7 @@ export default function CesiumViewer() {
             key={pano.id}
             name={pano.name}
             position={Cartesian3.fromDegrees(pano.longitude, pano.latitude, pano.height)}
-            billboard={{ image: "/blue_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
+            billboard={{ image: "/blue_marker_light.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
             onClick={() => {
               setSelectedMarker(null);
               openPanoById(pano.id);
