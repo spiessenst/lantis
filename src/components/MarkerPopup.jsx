@@ -35,12 +35,22 @@ export default function MarkerPopup({ marker, onClose }) {
 
         {/* Optional image (clickable) */}
         {marker.image && (
-          <img
-            src={marker.image}
-            alt={`Afbeelding van ${marker.name}`}
-            className="w-full h-44 object-cover cursor-pointer"
-            onClick={() => setIsFullscreen(true)}
-          />
+          <div className="relative">
+  <img
+    src={marker.image}
+    alt={`Afbeelding van ${marker.name}`}
+    className="w-full h-44 object-cover select-none"
+    draggable={false}
+  />
+  <button
+    type="button"
+    onClick={() => setIsFullscreen(true)}
+    className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md"
+    aria-label="Open fullscreen"
+  >
+    Bekijk groter
+  </button>
+</div>
         )}
 
         {/* Scrollable content */}
@@ -55,7 +65,7 @@ export default function MarkerPopup({ marker, onClose }) {
       {isFullscreen && (
         <div className="fixed inset-0 z-[9999] bg-black bg-opacity-90 flex items-center justify-center">
             <button
-        onClick={onClose}
+        onClick={ () => setIsFullscreen(false)}
         className="absolute top-4 right-4 bg-white/90 hover:bg-white text-black px-4 py-2 rounded-full shadow-lg z-[10000] select-none transition-all"
         type="button"
         aria-label="Close panorama viewer"
