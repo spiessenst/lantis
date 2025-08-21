@@ -352,9 +352,15 @@ export default function CesiumViewer() {
  
 
 
-      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50;
-      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4000;
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100;
+      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 3000;
       viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+      viewer.scene.postProcessStages.fxaa.enabled = true;
+
+/*       viewer.scene.globe.enableLighting = false;
+viewer.scene.light = new DirectionalLight({
+  direction: new Cartesian3(1.0, 0.0, -1.0)
+}); */
 
       if (views && Object.keys(views).length > 0) {
         const firstView = Object.values(views)[0];
@@ -459,14 +465,11 @@ export default function CesiumViewer() {
             url={url}
             maximumScreenSpaceError={maximumScreenSpaceError}
             maximumMemoryUsage={512}
-           // shadows={ShadowMode.ENABLED}
- onReady={(tileset) => {
-      /* tileset.imageBasedLighting = new ImageBasedLighting();
-      tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 0.0); // [diffuse, specular] */
-
-
-      
-    }}
+        //    shadows={ShadowMode.ENABLED}
+        // onReady={(tileset) => {
+       //tileset.imageBasedLighting = new ImageBasedLighting();
+      //tileset.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(1.0, 1.0); // [diffuse, specular] 
+  //  }}
              
           />
         ))}
@@ -476,7 +479,7 @@ export default function CesiumViewer() {
             key={marker.id}
             name={marker.name}
             position={Cartesian3.fromDegrees(marker.longitude, marker.latitude, marker.height)}
-            billboard={{ image: "/green_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
+            billboard={{ image: "/green_marker.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.4 }}
             onClick={() => setSelectedMarker(marker)}
           />
         ))}
@@ -486,7 +489,7 @@ export default function CesiumViewer() {
             key={pano.id}
             name={pano.name}
             position={Cartesian3.fromDegrees(pano.longitude, pano.latitude, pano.height)}
-            billboard={{ image: "/blue_marker_light.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.3 }}
+            billboard={{ image: "/blue_marker_light.svg", verticalOrigin: VerticalOrigin.BOTTOM, scale: 0.4 }}
             onClick={() => {
               setSelectedMarker(null);
               openPanoById(pano.id);
