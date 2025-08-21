@@ -1,11 +1,21 @@
 [
   {
        "id": "SBE1",
-       "name": "Central Plaza",
+       "name": "zuid",
        "latitude": 51.23138,
        "longitude": 4.36056,
        "height": 50,
        "imageUrl": "/panoramas/panotest.jpg",
        "northOffsetDeg": 90
+  },
+
+    {
+       "id": "SBE2",
+       "name": "tunnel",
+       "latitude": 51.2372649,
+       "longitude": 4.3675116,
+       "height": 50,
+       "imageUrl": "/panoramas/tunnel.jpg",
+       "northOffsetDeg": 0
   }
 ]
