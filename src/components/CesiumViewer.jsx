@@ -5,19 +5,17 @@ import {
   Ion,
   IonResource,
   VerticalOrigin,
-  ShadowMode,
+
   ScreenSpaceEventType,
   GeoJsonDataSource,
   defined,
   ClippingPolygonCollection,
   ClippingPolygon,
-  Color,
-  DirectionalLight, ImageBasedLighting , Cartesian2  ,ImageryLayer , IonImageryProvider
+  
  
 } from "cesium";
 
 import { QrCode } from "lucide-react";
-import { X } from "lucide-react";
 
 import FlyToButton from "./FlyToButton";
 import MarkerPopup from "./MarkerPopup";
@@ -445,6 +443,14 @@ viewer.scene.light = new DirectionalLight({
       className="relative w-full"
       style={{ height: "100dvh", paddingBottom: "env(safe-area-inset-bottom)" }}
     >
+
+       <div className="fixed top-4 right-4 z-50">
+      <img
+        src="images/bol.png" // replace with your logo path
+        alt="Logo"
+        className="h-10 w-auto"
+      />
+    </div>
       <Viewer ref={viewerRef} full {...VIEWER_OPTIONS}  >
         {tilesetUrl && (
           <Cesium3DTileset
