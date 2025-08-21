@@ -355,7 +355,7 @@ export default function CesiumViewer() {
       viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100;
       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 3000;
       viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-      viewer.scene.postProcessStages.fxaa.enabled = true;
+     // viewer.scene.postProcessStages.fxaa.enabled = true;
 
 /*       viewer.scene.globe.enableLighting = false;
 viewer.scene.light = new DirectionalLight({
@@ -522,12 +522,12 @@ viewer.scene.light = new DirectionalLight({
                 className="flex-shrink-0"
               />
             ))}
-            <CameraLogger viewerRef={viewerRef} label="Log View" className="flex-shrink-0" />
+       {/*      <CameraLogger viewerRef={viewerRef} label="Log View" className="flex-shrink-0" />*/}
           </div>
         </div>
       )}
 
-      <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+        <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
 
       {renderQRUI()}
     </div>
